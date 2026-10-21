@@ -1,0 +1,197 @@
+name: Android build
+
+# Builds the three artifacts you install from the Actions tab:
+#   zloy-debug.apk    — debug build, install on your phone right away
+#   zloy-release.apk  — optimised build (see the signing note in README.md)
+#   zloy.aab          — Android App Bundle for Play Store upload tooling
+#
+# Runs on push, on a manual dispatch, and on version tags.
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: "Which artifacts to build"
+        required: true
+        default: all
+        type: choice
+        options: [all, debug-only, release-only]
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: "3.47.7"
+  JAVA_VERSION: "17"
+
+jobs:
+  build:
+    name: Build APK + AAB
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (AGP 9 requires it)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Toolchain versions
+        run: |
+          flutter --version
+          java -version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Restore release keystore (optional)
+        # Only runs if you added the four repository secrets described in
+        # README.md → Signing. Without them the release APK is signed with the
+        # debug key and cannot be published to Google Play.
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        working-directory: app/android
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_B64:-}" ]; then
+            echo "No ANDROID_KEYSTORE_BASE64 secret configured."
+            echo "Release artifacts will be signed with the DEBUG key (not publishable)."
+            exit 0
+          fi
+          umask 077
+          printf '%s' "$KEYSTORE_B64" | base64 -d > release-keystore.jks
+          {
+            echo "storeFile=$GITHUB_WORKSPACE/app/android/release-keystore.jks"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASSWORD"
+          } > key.properties
+          echo "Release keystore restored from secrets (contents never printed)."
+
+      - name: Build debug APK
+        if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'debug-only' || github.event.inputs.build_type == '' }}
+        run: flutter build apk --debug --build-number "${{ github.run_number }}"
+
+      - name: Build release APK
+        if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'release-only' || github.event.inputs.build_type == '' }}
+        run: flutter build apk --release --build-number "${{ github.run_number }}"
+
+      - name: Build release App Bundle
+        if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'release-only' || github.event.inputs.build_type == '' }}
+        run: flutter build appbundle --release --build-number "${{ github.run_number }}"
+
+      - name: Rename artifacts to the documented filenames
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          if [ -f build/app/outputs/flutter-apk/app-debug.apk ]; then
+            cp build/app/outputs/flutter-apk/app-debug.apk dist/zloy-debug.apk
+          fi
+          if [ -f build/app/outputs/flutter-apk/app-release.apk ]; then
+            cp build/app/outputs/flutter-apk/app-release.apk dist/zloy-release.apk
+          fi
+          if [ -f build/app/outputs/bundle/release/app-release.aab ]; then
+            cp build/app/outputs/bundle/release/app-release.aab dist/zloy.aab
+          fi
+          ls -lh dist
+          # Fail loudly if a requested artifact is missing instead of uploading nothing.
+          if [ -z "$(ls -A dist)" ]; then
+            echo "::error::No artifacts were produced."
+            exit 1
+          fi
+
+      - name: Record signing status (never claims Play-readiness)
+        run: |
+          set -euo pipefail
+          if [ -f android/key.properties ]; then
+            SIGNING="signed with the release keystore supplied via repository secrets"
+          else
+            SIGNING="signed with the Flutter DEBUG key — installable for testing, NOT publishable to Google Play"
+          fi
+          {
+            echo "### ZLOY.AI build"
+            echo ""
+            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- Flutter: ${FLUTTER_VERSION} · JDK: ${JAVA_VERSION}"
+            echo "- Release artifacts are ${SIGNING}."
+            echo ""
+            echo "Download: **Actions → this run → Artifacts**."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload debug APK
+        if: ${{ hashFiles('app/dist/zloy-debug.apk') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: zloy-debug-apk
+          path: app/dist/zloy-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload release APK
+        if: ${{ hashFiles('app/dist/zloy-release.apk') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: zloy-release-apk
+          path: app/dist/zloy-release.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload App Bundle
+        if: ${{ hashFiles('app/dist/zloy.aab') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: zloy-aab
+          path: app/dist/zloy.aab
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Attach artifacts to a GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download built artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create or update the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/zloy-debug.apk
+            dist/zloy-release.apk
+            dist/zloy.aab
+          body: |
+            ZLOY.AI ${{ github.ref_name }}
+
+            Install on Android: download `zloy-debug.apk` (or `zloy-release.apk`),
+            tap it, and allow installing from this source when prompted.
+
+            If no release keystore was configured in repository secrets, the
+            release APK is signed with the debug key: it installs and runs, but
+            it is **not** acceptable for Google Play. See README.md → Signing.

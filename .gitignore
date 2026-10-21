@@ -1,0 +1,61 @@
+# ── Secrets (never commit these) ─────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+key.properties
+*.jks
+*.keystore
+android/key.properties
+
+# ── Flutter / Dart ───────────────────────────────────────────────────────────
+app/.dart_tool/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/.packages
+app/build/
+app/android/.gradle/
+app/android/app/debug/
+app/android/app/profile/
+app/android/app/release/
+app/android/local.properties
+app/android/app/src/main/java/io/flutter/plugins/
+app/ios/Pods/
+app/ios/.symlinks/
+app/ios/Flutter/Flutter.framework
+app/ios/Flutter/Flutter.podspec
+app/macos/Pods/
+app/linux/flutter/ephemeral/
+app/windows/flutter/ephemeral/
+app/coverage/
+app/*.iml
+app/.idea/
+app/**/*.g.dart.lock
+
+# ── Android build leftovers ──────────────────────────────────────────────────
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+dist/
+
+# ── Python backend ───────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+zloy.db
+*.sqlite3
+
+# ── Editors / OS ─────────────────────────────────────────────────────────────
+.vscode/
+.DS_Store
+Thumbs.db
+*.log

@@ -24,7 +24,10 @@ if (hasReleaseKeystore) {
 
 android {
     namespace = "ai.zloy.app"
-    compileSdk = flutter.compileSdkVersion
+    // permission_handler_android requires Android SDK 37+.
+    // Flutter's default compileSdkVersion is lower on some toolchains, so we must
+    // override it explicitly for this project to build successfully.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

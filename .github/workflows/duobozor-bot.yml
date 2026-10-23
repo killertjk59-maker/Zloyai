@@ -1,0 +1,44 @@
+name: Telegram bot (@Bozoronline_bot)
+
+# Polling-и оддӣ: ҳар 10 дақиқа getUpdates → ҷавоб. Вебхук/сервер лозим нест.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: duobozor-bot
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: duobozor/scripts
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Poll Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          ADMIN_CHAT_ID: ${{ secrets.ADMIN_CHAT_ID }}
+        run: node bot.mjs
+
+      - name: Persist offset
+        run: |
+          git config user.name  "duobozor-bot"
+          git config user.email "bot@duobozor.tj"
+          if [ -f .bot-state.json ]; then
+            git add .bot-state.json
+            git diff --quiet --cached || git commit -m "bot: offset update [skip ci]"
+            git push || true
+          fi

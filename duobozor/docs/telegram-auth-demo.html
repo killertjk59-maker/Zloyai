@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="tj">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DuoBozor — Вуруд тавассути Telegram</title>
+<style>
+  :root{--red:#E8402A;--orange:#FF8A3D;--ink:#12151C;--muted:#7A8299;--line:#E7E9F0;--bg:#F5F6FA;
+        --green:#12A150;--tg:#2AABEE;--tg-dark:#1C8FD0;--gold:#FFB020;--blue:#2F6FED;
+        --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:var(--font);background:#0B0E14;color:#E9EDF5;-webkit-font-smoothing:antialiased}
+
+  header.top{max-width:1400px;margin:0 auto;padding:32px 26px 4px;display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,var(--tg),var(--tg-dark));display:grid;place-items:center;box-shadow:0 8px 22px rgba(42,171,238,.4);font-size:22px}
+  h1{font-size:23px;letter-spacing:-.4px;color:#fff}
+  .sub{font-size:12.5px;color:#8A93A8;margin-top:4px;max-width:660px;line-height:1.55}
+  .langbtn{display:flex;background:#171C27;border:1px solid #262D3C;border-radius:11px;padding:3px}
+  .langbtn button{background:none;border:0;color:#8A93A8;font:600 12px var(--font);padding:7px 15px;border-radius:8px;cursor:pointer}
+  .langbtn button.on{background:var(--tg);color:#fff}
+
+  .wrap{max-width:1400px;margin:0 auto;padding:24px 26px 60px}
+
+  /* ---------- tabs for 3 mechanisms ---------- */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+  .tb{background:#141A26;border:1.5px solid #232C3E;border-radius:14px;padding:11px 16px;cursor:pointer;
+      font:700 12.5px var(--font);color:#9AA5BC;display:flex;align-items:center;gap:8px;transition:.2s}
+  .tb.on{border-color:var(--tg);background:#12222E;color:#fff}
+  .tb .n{width:19px;height:19px;border-radius:6px;background:#232C3E;display:grid;place-items:center;font:800 10px var(--font);color:#8A93A8}
+  .tb.on .n{background:var(--tg);color:#fff}
+
+  .panelx{display:none}
+  .panelx.on{display:block;animation:fade .3s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .stagerow{display:flex;gap:40px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+
+  /* ---------- phones ---------- */
+  .phone{width:330px;height:700px;border-radius:44px;background:#1C2230;padding:10px;box-shadow:0 30px 70px rgba(0,0,0,.6),0 0 0 1px #2A3241 inset;flex:none;position:relative}
+  .screen{width:100%;height:100%;border-radius:35px;overflow:hidden;position:relative;display:flex;flex-direction:column;background:var(--bg)}
+  .notch{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:92px;height:22px;background:#0A0D13;border-radius:12px;z-index:60}
+  .statusbar{height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:600 11px var(--font);color:var(--ink);flex:none}
+  .cap{color:#C9D0DE;font:600 13px var(--font);margin-top:12px;text-align:center}
+  .cap span{display:block;color:#6E7891;font-weight:400;font-size:11px;margin-top:3px}
+
+  /* ---------- app screen ---------- */
+  .appc{flex:1;padding:10px 20px 20px;display:flex;flex-direction:column;transition:background .3s}
+  .appc .ttl{font-size:20px;font-weight:800;letter-spacing:-.4px;margin-top:8px}
+  .appc .sub2{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+  .tgbtn{display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,var(--tg),var(--tg-dark));color:#fff;
+         border:0;border-radius:15px;padding:15px;font:700 14px var(--font);cursor:pointer;margin-top:20px;
+         box-shadow:0 8px 22px rgba(42,171,238,.4);transition:transform .12s}
+  .tgbtn:active{transform:scale(.98)}
+  .tgbtn .ic{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:15px}
+  .st{display:flex;align-items:center;gap:11px;padding:13px 0;opacity:.35;transition:opacity .35s}
+  .st.on{opacity:1}
+  .st .dot{width:24px;height:24px;border-radius:50%;border:2px solid #C9D0DE;display:grid;place-items:center;flex:none;font-size:11px;color:#fff;transition:.3s}
+  .st.on .dot{background:var(--green);border-color:var(--green)}
+  .st.busy .dot{border-color:var(--red);border-right-color:transparent;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .st .tx{font-size:12.5px;font-weight:600;color:var(--ink)}
+  .st .sm{font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+  .acctbox{background:#fff;border-radius:16px;padding:14px;box-shadow:0 3px 14px rgba(18,21,28,.08);display:flex;gap:12px;align-items:center;
+           margin-top:auto;opacity:0;transform:translateY(10px);transition:.4s}
+  .acctbox.on{opacity:1;transform:none}
+  .acctbox .av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--orange));display:grid;place-items:center;font:800 17px var(--font);color:#fff;flex:none}
+  .acctbox .nm{font-size:13px;font-weight:800;color:var(--ink)}
+  .acctbox .mt{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.5}
+  .acctbox .mt b{color:var(--green)}
+
+  /* ---------- telegram chat ---------- */
+  .tgscr{background:linear-gradient(180deg,#8CBFD8,#A9D3E4 40%,#BBDDEA);position:relative}
+  .tgscr:after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(255,255,255,.5) 0,transparent 40%),radial-gradient(circle at 80% 70%,rgba(255,255,255,.45) 0,transparent 45%);pointer-events:none}
+  .tghead{flex:none;background:#2AABEE;color:#fff;padding:10px 14px 12px;display:flex;align-items:center;gap:11px;position:relative;z-index:2}
+  .tghead .bav{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--orange));display:grid;place-items:center;font-size:17px}
+  .tghead .bn{font-size:13.5px;font-weight:700}
+  .tghead .bs{font-size:10px;opacity:.85}
+  .chat{flex:1;overflow-y:auto;padding:14px 12px 20px;display:flex;flex-direction:column;gap:9px;position:relative;z-index:2;scrollbar-width:none}
+  .chat::-webkit-scrollbar{display:none}
+  .msg{max-width:85%;padding:9px 12px;border-radius:13px;font-size:12px;line-height:1.5;box-shadow:0 1px 3px rgba(0,0,0,.12);
+       opacity:0;transform:translateY(8px);animation:bub .3s ease forwards;background:#fff;color:#12151C;align-self:flex-start;border-bottom-left-radius:5px}
+  .msg.me{align-self:flex-end;background:#E3FDD4;border-bottom-left-radius:13px;border-bottom-right-radius:5px}
+  @keyframes bub{to{opacity:1;transform:none}}
+  .msg .t{font-size:9px;color:#8C99A8;text-align:right;margin-top:3px}
+  .kb{background:#fff;border-radius:13px;padding:6px;align-self:stretch;box-shadow:0 1px 3px rgba(0,0,0,.12);
+      opacity:0;animation:bub .3s ease forwards}
+  .kb button{width:100%;border:0;background:#F1F5F9;color:#0F6FA8;font:600 12.5px var(--font);padding:11px;border-radius:9px;cursor:pointer;margin-top:5px;transition:.15s}
+  .kb button:first-child{margin-top:0}
+  .kb button:hover{background:#E2F1FA}
+  .kb button.press{background:#2AABEE;color:#fff}
+  .tginput{flex:none;background:#fff;padding:9px 14px;display:flex;align-items:center;gap:9px;color:#9AA5B5;font-size:12px;position:relative;z-index:2}
+  .tginput .box{flex:1;background:#F1F5F9;border-radius:16px;padding:8px 12px}
+
+  /* ---------- network log ---------- */
+  .netlog{background:#0E141E;border:1px solid #232C3E;border-radius:16px;padding:16px;margin-top:26px;font:600 11px ui-monospace,Menlo,monospace}
+  .netlog h4{font:700 11px var(--font);color:#7E89A1;text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
+  .nl{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #1A2231;color:#7E89A1;opacity:0;transition:opacity .3s}
+  .nl.on{opacity:1}
+  .nl .tm{color:#4E5A70;width:34px;flex:none}
+  .nl .mt{width:44px;flex:none;font-weight:800}
+  .nl .mt.post{color:#FFB020}
+  .nl .mt.get{color:#5FD394}
+  .nl .mt.ws{color:#84AEFF}
+  .nl .p{color:#C2CADB;flex:1;word-break:break-all}
+  .nl .r{color:#5FD394;flex:none}
+
+  .note{background:#141A26;border:1px solid #232C3E;border-left:3px solid var(--tg);border-radius:12px;padding:14px 16px;margin-top:20px;
+        font-size:12px;color:#A9B4C8;line-height:1.75}
+  .note b{color:#fff}
+  .note code{font:600 10.5px ui-monospace,Menlo,monospace;background:#0E141E;color:#FFC24A;padding:2px 6px;border-radius:5px}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px}
+  @media(max-width:900px){.grid2{grid-template-columns:1fr}}
+  .infobox{background:#141A26;border:1px solid #232C3E;border-radius:16px;padding:18px}
+  .infobox h4{font-size:13px;color:#fff;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .infobox .bd{font-size:11.5px;color:#9AA5BC;line-height:1.85}
+  .infobox code{font:600 10.5px ui-monospace,Menlo,monospace;background:#0E141E;color:#FFC24A;padding:2px 6px;border-radius:5px}
+  .infobox .ok{color:#5FD394;font-weight:800}
+  .infobox .no{color:#FF8C82;font-weight:800}
+  .replay{width:100%;border:1px solid #2C3648;background:#1A2231;color:#C2CADB;border-radius:11px;padding:10px;font:700 12px var(--font);cursor:pointer;margin-top:12px}
+  .replay:hover{border-color:var(--tg);color:#fff}
+  footer{text-align:center;color:#5C657A;font-size:11px;padding:10px 20px 40px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <div class="logo">✈️</div>
+    <div>
+      <h1>Вуруд тавассути Telegram</h1>
+      <div class="sub">Се механизми гуногун — ва кадоме барои барномаи мобилии шумо дуруст аст. Тугмаҳоро пахш кунед, ҷараён зинда иҷро мешавад.</div>
+    </div>
+  </div>
+  <div class="langbtn">
+    <button class="on" onclick="setLang('tj',this)">Тоҷикӣ</button>
+    <button onclick="setLang('ru',this)">Русский</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="tabs">
+    <div class="tb on" onclick="pick(0,this)"><span class="n">1</span> Bot + deep-link <span style="color:#5FD394;font-weight:800">★ барои мобилӣ</span></div>
+    <div class="tb" onclick="pick(1,this)"><span class="n">2</span> Telegram Mini App (WebApp)</div>
+    <div class="tb" onclick="pick(2,this)"><span class="n">3</span> Login Widget (веб)</div>
+  </div>
+
+  <!-- ══════════════════════ 1 · BOT DEEP-LINK ══════════════════════ -->
+  <div class="panelx on" id="p0">
+    <div class="stagerow">
+
+      <div>
+        <div class="phone"><div class="notch"></div><div class="screen">
+          <div class="statusbar"><span>9:41</span><span style="font-size:10px">●●●</span></div>
+          <div class="appc" id="app">
+            <div class="ttl" data-tj="Вуруд" data-ru="Вход">Вуруд</div>
+            <div class="sub2" data-tj="Бе парол, бе SMS. Танҳо Telegram-и худро кушоед." data-ru="Без пароля, без SMS. Просто откройте свой Telegram.">Бе парол, бе SMS. Танҳо Telegram-и худро кушоед.</div>
+
+            <button class="tgbtn" id="startBtn" onclick="runBotFlow()">
+              <div class="ic">✈️</div>
+              <span data-tj="Идома бо Telegram" data-ru="Продолжить с Telegram">Идома бо Telegram</span>
+            </button>
+
+            <div style="margin-top:22px">
+              <div class="st" id="st0"><div class="dot">✓</div><div><div class="tx" data-tj="1 · Сохтани линки якдафъаина" data-ru="1 · Создание одноразовой ссылки">1 · Сохтани линки якдафъаина</div><div class="sm">POST /auth/telegram/start</div></div></div>
+              <div class="st" id="st1"><div class="dot">✓</div><div><div class="tx" data-tj="2 · Кушодани бот дар Telegram" data-ru="2 · Открытие бота в Telegram">2 · Кушодани бот дар Telegram</div><div class="sm">t.me/DuoBozorBot?start=login_a7f3…</div></div></div>
+              <div class="st" id="st2"><div class="dot">✓</div><div><div class="tx" data-tj="3 · Тасдиқ дар бот" data-ru="3 · Подтверждение в боте">3 · Тасдиқ дар бот</div><div class="sm" data-tj="Тугмаи «Тасдиқи вуруд» + рақами телефон" data-ru="Кнопка «Подтвердить вход» + номер телефона">Тугмаи «Тасдиқи вуруд» + рақами телефон</div></div></div>
+              <div class="st" id="st3"><div class="dot">✓</div><div><div class="tx" data-tj="4 · Барнома токен мегирад" data-ru="4 · Приложение получает токен">4 · Барнома токен мегирад</div><div class="sm">GET /auth/telegram/poll → JWT</div></div></div>
+            </div>
+
+            <div class="acctbox" id="acctBox">
+              <div class="av">Ф</div>
+              <div><div class="nm" data-tj="Хуш омадед, Фарзона" data-ru="Добро пожаловать, Фарзона">Хуш омадед, Фарзона</div>
+              <div class="mt" data-tj="<b>247 фармоиш</b> ва ҳамён ҷояшон — ҳисоби кӯҳна пайдо шуд" data-ru="<b>247 заказов</b> и кошелёк на месте — старый аккаунт найден"><b>247 фармоиш</b> ва ҳамён ҷояшон — ҳисоби кӯҳна пайдо шуд</div></div>
+            </div>
+          </div>
+        </div></div>
+        <div class="cap">Барномаи шумо (Expo) <span data-tj="Мунтазири тасдиқ дар бот" data-ru="Ждёт подтверждения в боте">Мунтазири тасдиқ дар бот</span></div>
+      </div>
+
+      <div>
+        <div class="phone"><div class="notch"></div><div class="screen tgscr">
+          <div class="statusbar" style="position:relative;z-index:3"><span>9:41</span><span style="font-size:10px">●●●</span></div>
+          <div class="tghead">
+            <div style="font-size:18px;opacity:.85">‹</div>
+            <div class="bav">🛍️</div>
+            <div><div class="bn">DuoBozor</div><div class="bs">bot · онлайн</div></div>
+          </div>
+          <div class="chat" id="chat"></div>
+          <div class="tginput"><div class="box" data-tj="Паём…" data-ru="Сообщение…">Паём…</div><span>🎤</span></div>
+        </div></div>
+        <div class="cap">Telegram-и корбар <span data-tj="Бот аз худи корбар мепурсад" data-ru="Бот спрашивает самого пользователя">Бот аз худи корбар мепурсад</span></div>
+      </div>
+    </div>
+
+    <div class="netlog">
+      <h4 data-tj="Логи шабака — он чӣ воқеан мешавад" data-ru="Сетевой лог — что происходит на самом деле">Логи шабака — он чӣ воқеан мешавад</h4>
+      <div class="nl" id="l0"><span class="tm">+0.0s</span><span class="mt post">POST</span><span class="p">/api/v1/auth/telegram/start  {device_id}</span><span class="r">→ {nonce, deep_link}</span></div>
+      <div class="nl" id="l1"><span class="tm">+0.4s</span><span class="mt get">OPEN</span><span class="p">t.me/DuoBozorBot?start=login_a7f3c9e2…</span><span class="r">→ Telegram</span></div>
+      <div class="nl" id="l2"><span class="tm">+3.1s</span><span class="mt post">POST</span><span class="p">Telegram → /internal/tg/webhook  update.message /start login_a7f3c9e2</span><span class="r">→ bot</span></div>
+      <div class="nl" id="l3"><span class="tm">+5.2s</span><span class="mt get">POLL</span><span class="p">/api/v1/auth/telegram/poll?nonce=a7f3c9e2  → 202 pending</span><span class="r">→ ждём</span></div>
+      <div class="nl" id="l4"><span class="tm">+8.4s</span><span class="mt post">POST</span><span class="p">/internal/tg/confirm  {nonce, chat_id, phone:+992921234567}</span><span class="r">→ user_id</span></div>
+      <div class="nl" id="l5"><span class="tm">+8.9s</span><span class="mt get">POLL</span><span class="p">/api/v1/auth/telegram/poll?nonce=a7f3c9e2  → 200 {access, refresh}</span><span class="r">→ ✓ JWT</span></div>
+      <button class="replay" onclick="runBotFlow()" data-tj="↻ Аз нав нишон диҳад" data-ru="↻ Показать заново">↻ Аз нав нишон диҳад</button>
+    </div>
+
+    <div class="note" data-tj="<b>Чаро ин бехатартарин роҳ аст:</b> токен ҳеҷ гоҳ дар URL намегузарад. Барнома танҳо <code>nonce</code>-и якдафъаин месозад (TTL 5 дақиқа, ба <code>device_id</code> часпида). Тасдиқ танҳо дар дохили Telegram аз ҷониби худи корбар сурат мегирад — пас касе линкро дуздӣ натавонад вуруд кунад." data-ru="<b>Почему это самый безопасный способ:</b> токен никогда не идёт в URL. Приложение создаёт только одноразовый <code>nonce</code> (TTL 5 минут, привязан к <code>device_id</code>). Подтверждение происходит только внутри Telegram самим пользователем — украденная ссылка бесполезна."><b>Чаро ин бехатартарин роҳ аст:</b> токен ҳеҷ гоҳ дар URL намегузарад. Барнома танҳо <code>nonce</code>-и якдафъаин месозад (TTL 5 дақиқа, ба <code>device_id</code> часпида). Тасдиқ танҳо дар дохили Telegram аз ҷониби худи корбар сурат мегирад — пас касе линкро дуздӣ натавонад вуруд кунад.</div>
+  </div>
+
+  <!-- ══════════════════════ 2 · MINI APP ══════════════════════ -->
+  <div class="panelx" id="p1">
+    <div class="stagerow">
+      <div>
+        <div class="phone"><div class="notch"></div><div class="screen tgscr">
+          <div class="statusbar" style="position:relative;z-index:3"><span>9:41</span><span style="font-size:10px">●●●</span></div>
+          <div class="tghead">
+            <div style="font-size:18px;opacity:.85">✕</div>
+            <div class="bav">🛍️</div>
+            <div><div class="bn">DuoBozor</div><div class="bs">mini app</div></div>
+          </div>
+          <div style="flex:1;background:var(--bg);padding:16px;display:flex;flex-direction:column;position:relative;z-index:2">
+            <div style="background:#fff;border-radius:14px;padding:13px;box-shadow:0 2px 10px rgba(18,21,28,.08)">
+              <div style="font:700 9.5px var(--font);color:#0C7A3C;background:#E6F7EE;padding:3px 8px;border-radius:6px;display:inline-block" data-tj="✓ MINI APP · initData мавҷуд" data-ru="✓ MINI APP · initData есть">✓ MINI APP · initData мавҷуд</div>
+              <div style="font:600 10px ui-monospace,Menlo,monospace;color:#5A6478;margin-top:9px;line-height:1.7;word-break:break-all">
+                query_id=AAH…&amp;user=%7B%22id%22%3A48…<br>&amp;auth_date=1761…&amp;<b style="color:var(--red)">hash=8f2c…</b>
+              </div>
+            </div>
+            <div style="margin-top:12px;font-size:11.5px;font-weight:700;color:var(--ink)" data-tj="Сервер санҷиши имзо мекунад:" data-ru="Сервер проверяет подпись:">Сервер санҷиши имзо мекунад:</div>
+            <div style="background:#12151C;border-radius:12px;padding:12px;margin-top:8px;font:600 10px ui-monospace,Menlo,monospace;color:#C2CADB;line-height:1.9">
+              secret = HMAC_SHA256("WebAppData",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bot_token)<br>
+              calc&nbsp;&nbsp;&nbsp;= HMAC_SHA256(secret,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data_check_string)<br>
+              <span style="color:#5FD394">calc === hash ✓</span>
+            </div>
+            <div class="acctbox on" style="margin-top:auto">
+              <div class="av">Ф</div>
+              <div><div class="nm" data-tj="Фарзона · вуруд шуд" data-ru="Фарзона · вошла">Фарзона · вуруд шуд</div><div class="mt" data-tj="247 фармоиш · бақия 342.50 c." data-ru="247 заказов · баланс 342.50 c.">247 фармоиш · бақия 342.50 c.</div></div>
+            </div>
+          </div>
+        </div></div>
+        <div class="cap">Telegram Mini App <span data-tj="Барнома дар дохили Telegram кушода мешавад" data-ru="Приложение открывается внутри Telegram">Барнома дар дохили Telegram кушода мешавад</span></div>
+      </div>
+
+      <div style="max-width:420px;display:flex;flex-direction:column;gap:14px">
+        <div class="infobox">
+          <h4>⚡ <span data-tj="Чӣ тавр кор мекунад" data-ru="Как работает">Чӣ тавр кор мекунад</span></h4>
+          <div class="bd" data-tj="1. Дар @BotFather → <code>/newapp</code> → URL-и веб-версияи шуморо медиҳед.<br>2. Корбар тугмаи менюро дар бот пахш мекунад.<br>3. Барнома дар дохили Telegram кушода мешавад ва <code>window.Telegram.WebApp.initData</code> мегирад.<br>4. Ин сатр ба сервер меравад — сервер бо <b>bot_token</b> имзоро тафтиш мекунад.<br>5. <code>auth_date</code> бояд &lt; 5 дақиқа бошад (replay-guard)." data-ru="1. В @BotFather → <code>/newapp</code> → даёте URL веб-версии.<br>2. Пользователь открывает меню-кнопку в боте.<br>3. Приложение открывается внутри Telegram и получает <code>window.Telegram.WebApp.initData</code>.<br>4. Строка уходит на сервер — сервер проверяет подпись через <b>bot_token</b>.<br>5. <code>auth_date</code> должен быть &lt; 5 минут (replay-guard).">1. Дар @BotFather → <code>/newapp</code> → URL-и веб-версияи шуморо медиҳед.<br>2. Корбар тугмаи менюро дар бот пахш мекунад.<br>3. Барнома дар дохили Telegram кушода мешавад ва <code>window.Telegram.WebApp.initData</code> мегирад.<br>4. Ин сатр ба сервер меравад — сервер бо <b>bot_token</b> имзоро тафтиш мекунад.<br>5. <code>auth_date</code> бояд &lt; 5 дақиқа бошад (replay-guard).</div>
+        </div>
+        <div class="infobox">
+          <h4>✅ <span data-tj="Кай мехоҳед" data-ru="Когда подходит">Кай мехоҳед</span></h4>
+          <div class="bd"><span class="ok" data-tj="✓» Веб-версия (PWA) доред" data-ru="✓ Есть веб-версия (PWA)">✓ Веб-версия (PWA) доред</span><br>
+          <span class="ok" data-tj="✓» Мехоҳед дар Telegram viral шавед (share, гурӯҳ)" data-ru="✓ Хотите виральности в Telegram">✓ Мехоҳед дар Telegram viral шавед</span><br>
+          <span class="no" data-tj="✕» Барои барномаи native танҳо — кифоя нест" data-ru="✕ Только для native-приложения — недостаточно">✕ Барои барномаи native танҳо — кифоя нест</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ 3 · LOGIN WIDGET ══════════════════════ -->
+  <div class="panelx" id="p2">
+    <div class="stagerow">
+      <div>
+        <div class="phone"><div class="notch"></div><div class="screen">
+          <div class="statusbar"><span>9:41</span><span style="font-size:10px">●●●</span></div>
+          <div style="flex:1;background:var(--bg);padding:18px;display:flex;flex-direction:column">
+            <div style="font-size:14px;font-weight:800;color:var(--ink)" data-tj="Вуруд ба DuoBozor" data-ru="Вход в DuoBozor">Вуруд ба DuoBozor</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:5px" data-tj="Дар браузери компютер" data-ru="В браузере на компьютере">Дар браузери компютер</div>
+
+            <div style="background:#fff;border-radius:14px;padding:18px;margin-top:18px;box-shadow:0 3px 14px rgba(18,21,28,.08);text-align:center">
+              <iframe style="width:100%;height:74px;border:0;border-radius:10px" srcdoc="
+                <body style='margin:0;font-family:-apple-system,Roboto,sans-serif'>
+                  <div style='text-align:center;padding:8px 0 4px'>
+                    <div style='font-size:10.5px;color:#5A6478;margin-bottom:10px'>Log in with Telegram</div>
+                    <div style='display:inline-flex;align-items:center;gap:8px;background:#2AABEE;color:#fff;padding:9px 16px;border-radius:9px;font-size:12px;font-weight:700'>✈️ Connect with Telegram</div>
+                  </div>
+                </body>"></iframe>
+              <div style="font:600 9.5px ui-monospace,Menlo,monospace;color:#8C99A8;margin-top:10px">oauth.telegram.org</div>
+            </div>
+
+            <div style="background:#FFF9EF;border:1px dashed #F0DDB8;border-radius:12px;padding:11px;margin-top:14px;font-size:10.5px;color:#8A5B00;line-height:1.6"
+                 data-tj="Ин равиш <b>танҳо дар браузер</b> кор мекунад. Дар барномаи мобилӣ браузер намекушояд — бинобар ин роҳи №1-ро истифода баред." data-ru="Этот способ работает <b>только в браузере</b>. В мобильном приложении браузер не откроется — используйте способ №1.">Ин равиш <b>танҳо дар браузер</b> кор мекунад. Дар барномаи мобилӣ браузер намекушояд — бинобар ин роҳи №1-ро истифода баред.</div>
+          </div>
+        </div></div>
+        <div class="cap">Login Widget <span data-tj="Барои веб ва панели админ" data-ru="Для веба и админ-панели">Барои веб ва панели админ</span></div>
+      </div>
+
+      <div style="max-width:430px">
+        <div class="infobox">
+          <h4>🌐 <span data-tj="Танҳо барои веб" data-ru="Только для веба">Танҳо барои веб</span></h4>
+          <div class="bd" data-tj="Сервер <code>id, first_name, username, auth_date, hash</code>-ро мегирад.<br><br>
+          Ҷараёни тафтиш:<br>
+          <code>secret = SHA256(bot_token)</code><br>
+          <code>hash == HMAC_SHA256(secret, data_check_string)</code><br><br>
+          <span class='ok'>✓ Журнали админӣ — корманд бо Telegram вуруд мешавад</span><br>
+          <span class='no'>✕ Барои барномаи мобилӣ мувофиқ нест</span>" data-ru="Сервер получает <code>id, first_name, username, auth_date, hash</code>.<br><br>Проверка:<br><code>secret = SHA256(bot_token)</code><br><code>hash == HMAC_SHA256(secret, data_check_string)</code><br><br><span class='ok'>✓ Журнал админа — сотрудник входит через Telegram</span><br><span class='no'>✕ Не подходит для мобильного приложения</span>">Сервер <code>id, first_name, username, auth_date, hash</code>-ро мегирад.<br><br>
+          Ҷараёни тафтиш:<br>
+          <code>secret = SHA256(bot_token)</code><br>
+          <code>hash == HMAC_SHA256(secret, data_check_string)</code><br><br>
+          <span class="ok">✓ Журнали админӣ — корманд бо Telegram вуруд мешавад</span><br>
+          <span class="no">✕ Барои барномаи мобилӣ мувофиқ нест</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ comparison ══════════ -->
+  <div class="grid2">
+    <div class="infobox">
+      <h4>📊 <span data-tj="Муқоиса" data-ru="Сравнение">Муқоиса</span></h4>
+      <div class="bd" style="line-height:2.1">
+        <div style="display:flex;justify-content:space-between"><span data-tj="Bot + deep-link" data-ru="Bot + deep-link">Bot + deep-link</span><b style="color:#5FD394" data-tj="★ Мобилӣ" data-ru="★ Мобильный">★ Мобилӣ</b></div>
+        <div style="display:flex;justify-content:space-between"><span>Mini App</span><b style="color:#FFC24A" data-tj="Веб/PWA" data-ru="Веб/PWA">Веб/PWA</b></div>
+        <div style="display:flex;justify-content:space-between"><span>Login Widget</span><b style="color:#FFC24A" data-tj="Танҳо веб" data-ru="Только веб">Танҳо веб</b></div>
+        <div style="display:flex;justify-content:space-between;border-top:1px solid #232C3E;margin-top:6px;padding-top:6px"><span data-tj="Ҳама ба як <code>auth_identities</code>" data-ru="Все в один <code>auth_identities</code>">Ҳама ба як <code>auth_identities</code></span><b style="color:#84AEFF">✓</b></div>
+      </div>
+    </div>
+    <div class="infobox">
+      <h4>⚠️ <span data-tj="4 хатои маъмул" data-ru="4 частые ошибки">4 хатои маъмул</span></h4>
+      <div class="bd" style="line-height:2">
+        <div data-tj="1. Токенро дар URL мефиристод (пайти корбар дар лог мемонад)" data-ru="1. Токен в URL (остаётся в логах прокси)">1. Токенро дар URL мефиристод (пайти корбар дар лог мемонад)</div>
+        <div data-tj="2. <code>hash</code>-ро санҷид, аммо <code>auth_date</code>-ро не" data-ru="2. Проверили <code>hash</code>, но не <code>auth_date</code>">2. <code>hash</code>-ро санҷид, аммо <code>auth_date</code>-ро не</div>
+        <div data-tj="3. Telegram <code>id</code>-ро ба <code>phone</code> гузошт (аккаунти дуюм)" data-ru="3. Telegram <code>id</code> положили в <code>phone</code> (второй аккаунт)">3. Telegram <code>id</code>-ро ба <code>phone</code> гузошт (аккаунти дуюм)</div>
+        <div data-tj="4. <code>initData</code>-ро кэш кард (қалбакӣ = вуруди ғайриқонунӣ)" data-ru="4. Закэшировали <code>initData</code> (подделка = взлом)">4. <code>initData</code>-ро кэш кард (қалбакӣ = вуруди ғайриқонунӣ)</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<footer>DuoBozor · Telegram auth demo · 23.10.2026</footer>
+
+<script>
+function setLang(l,btn){
+  document.querySelectorAll('.langbtn button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); document.documentElement.lang=l;
+  document.querySelectorAll('[data-tj]').forEach(el=>{const v=el.getAttribute('data-'+l); if(v) el.innerHTML=v;});
+}
+function pick(i,el){
+  document.querySelectorAll('.tb').forEach(t=>t.classList.remove('on')); el.classList.add('on');
+  document.querySelectorAll('.panelx').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p'+i).classList.add('on');
+}
+
+/* ─────────── bot deep-link flow simulation ─────────── */
+let running=false;
+const chat=document.getElementById('chat');
+const steps=['st0','st1','st2','st3'];
+const logs=['l0','l1','l2','l3','l4','l5'];
+
+function msg(html, me){
+  const d=document.createElement('div');
+  d.className='msg'+(me?' me':'');
+  d.innerHTML=html+'<div class="t">9:41</div>';
+  chat.appendChild(d); chat.scrollTop=chat.scrollHeight;
+  return d;
+}
+function keyboard(buttons){
+  const k=document.createElement('div'); k.className='kb';
+  buttons.forEach((b,i)=>{
+    const btn=document.createElement('button'); btn.textContent=b.label;
+    btn.onclick=()=>{ btn.classList.add('press'); setTimeout(()=>b.onClick(btn),220); };
+    k.appendChild(btn);
+  });
+  chat.appendChild(k); chat.scrollTop=chat.scrollHeight;
+  return k;
+}
+function setStep(id,state){ const e=document.getElementById(id); e.classList.remove('busy'); e.classList.add(state); }
+function clearAll(){
+  chat.innerHTML='';
+  steps.forEach(s=>{const e=document.getElementById(s); e.classList.remove('on','busy');});
+  logs.forEach(l=>document.getElementById(l).classList.remove('on'));
+  document.getElementById('acctBox').classList.remove('on');
+}
+
+function runBotFlow(){
+  if(running) return; running=true;
+  clearAll();
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+  (async()=>{
+    // 1 · nonce
+    setStep('st0','busy'); document.getElementById('l0').classList.add('on');
+    await wait(700);
+    setStep('st0','on');
+
+    // 2 · open telegram
+    setStep('st1','busy'); document.getElementById('l1').classList.add('on');
+    await wait(700);
+    msg('👋 <b>Салом!</b> Барои ворид шудан ба <b>DuoBozor</b> тугмаи поёнро пахш кунед.');
+    await wait(500);
+    keyboard([{label:'✅ Тасдиқи вуруд', onClick:()=>{ confirmStep(); }}]);
+    setStep('st1','on');
+
+    running=false;
+  })();
+}
+
+async function confirmStep(){
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  running=true;
+  // user taps button → bot gets /start login_<nonce>
+  document.getElementById('l2').classList.add('on');
+  msg('🔗 <i>/start login_a7f3c9e2</i>', true);
+  await wait(500);
+  msg('🛡️ Барои он ки ҳисоби кӯҳнаи шумо (247 фармоиш) пайдо шавад, рақами телефонро тасдиқ кунед.');
+  await wait(400);
+  keyboard([{label:'📱 Рақами манро тасдиқ кунам', onClick:()=>{ phoneStep(); }}]);
+  setStep('st2','busy');
+}
+
+async function phoneStep(){
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  msg('📱 <i>+992 92 123 45 67</i>', true);   // contact message
+  document.getElementById('l3').classList.add('on');
+  await wait(700);
+  msg('✅ <b>Тасдиқ шуд!</b><br>Ҳисоб: Фарзона · 247 фармоиш<br>Ба барнома баргардед — шумо аллакай ворид шудаед.');
+  setStep('st2','on');
+  document.getElementById('l4').classList.add('on');
+  document.getElementById('l5').classList.add('on');
+  setStep('st3','busy');
+  await wait(700);
+  setStep('st3','on');
+  document.getElementById('acctBox').classList.add('on');
+  running=false;
+}
+</script>
+</body>
+</html>

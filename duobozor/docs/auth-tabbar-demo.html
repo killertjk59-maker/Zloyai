@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="tj">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DuoBozor — Auth + Animated Tab Bar</title>
+<style>
+  :root{
+    --red:#E8402A; --orange:#FF8A3D; --gold:#FFB020; --green:#12A150;
+    --ink:#12151C; --ink2:#2A3040; --muted:#7A8299; --line:#E7E9F0;
+    --bg:#F5F6FA; --white:#fff; --blue:#2F6FED; --tg:#2AABEE; --goog:#4285F4;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:var(--font);background:#0B0E14;color:#E9EDF5;-webkit-font-smoothing:antialiased}
+
+  header.top{max-width:1360px;margin:0 auto;padding:32px 26px 8px;display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,var(--red),var(--orange));display:grid;place-items:center;box-shadow:0 8px 22px rgba(232,64,42,.45)}
+  h1{font-size:23px;letter-spacing:-.4px;color:#fff}
+  .sub{font-size:12.5px;color:#8A93A8;margin-top:4px;max-width:620px;line-height:1.5}
+  .langbtn{display:flex;background:#171C27;border:1px solid #262D3C;border-radius:11px;padding:3px}
+  .langbtn button{background:none;border:0;color:#8A93A8;font:600 12px var(--font);padding:7px 15px;border-radius:8px;cursor:pointer}
+  .langbtn button.on{background:var(--red);color:#fff}
+
+  .wrap{max-width:1360px;margin:0 auto;padding:26px}
+  .row-phones{display:flex;gap:44px;justify-content:center;flex-wrap:wrap;align-items:flex-start}
+
+  /* phone frame */
+  .phone{width:336px;height:712px;border-radius:44px;background:#1C2230;padding:10px;box-shadow:0 30px 70px rgba(0,0,0,.6),0 0 0 1px #2A3241 inset;position:relative;flex:none}
+  .screen{width:100%;height:100%;border-radius:35px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .notch{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:96px;height:22px;background:#0A0D13;border-radius:12px;z-index:60}
+  .statusbar{height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:600 11px var(--font);color:var(--ink);flex:none;z-index:50}
+  .cap{color:#C9D0DE;font:600 13px var(--font);margin-top:12px;text-align:center}
+  .cap span{display:block;color:#6E7891;font-weight:400;font-size:11px;margin-top:3px}
+
+  /* ============ AUTH ============ */
+  .auth{flex:1;position:relative;overflow:hidden}
+  .step{position:absolute;inset:0;display:flex;flex-direction:column;padding:8px 22px 22px;opacity:0;transform:translateX(28px);pointer-events:none;
+        transition:opacity .28s ease,transform .34s cubic-bezier(.22,.9,.28,1);background:var(--bg)}
+  .step.on{opacity:1;transform:none;pointer-events:auto;z-index:2}
+  .step.back{transform:translateX(-28px)}
+
+  .auth-art{height:170px;margin:6px -22px 0;background:linear-gradient(150deg,var(--red),#FF6A3D 60%,var(--orange));border-radius:0 0 34px 34px;position:relative;overflow:hidden;display:grid;place-items:center}
+  .auth-art:after{content:"";position:absolute;width:210px;height:210px;border-radius:50%;background:rgba(255,255,255,.14);top:-90px;right:-70px}
+  .auth-art .bag{font-size:52px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.25));position:relative;z-index:2}
+  .auth-title{font-size:21px;font-weight:800;letter-spacing:-.5px;color:var(--ink);margin-top:22px;text-align:center}
+  .auth-sub{font-size:12.5px;color:var(--muted);text-align:center;margin-top:7px;line-height:1.5}
+
+  .prov{display:flex;align-items:center;gap:11px;background:#fff;border-radius:15px;padding:13px 14px;margin-top:10px;box-shadow:0 2px 10px rgba(18,21,28,.07);
+         font:600 13.5px var(--font);color:var(--ink);cursor:pointer;position:relative;overflow:hidden;border:1.5px solid transparent;
+         transition:transform .12s ease,border-color .2s}
+  .prov:active{transform:scale(.985)}
+  .prov .ic{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;flex:none;font-size:15px}
+  .prov .arrow{margin-left:auto;color:#C3CAD8;font-size:16px}
+  .prov.primary{background:linear-gradient(135deg,var(--tg),#1C8FD0);color:#fff;box-shadow:0 8px 20px rgba(42,171,238,.35)}
+  .prov.primary .ic{background:rgba(255,255,255,.2)}
+  .prov.primary .arrow{color:rgba(255,255,255,.7)}
+  .prov .rec{font:700 8.5px var(--font);background:#FFF4DC;color:#B47A00;padding:3px 7px;border-radius:6px;margin-left:6px}
+
+  .legal{font-size:9.5px;color:#9AA2B4;text-align:center;line-height:1.55;margin-top:auto;padding-top:14px}
+  .legal b{color:var(--red);font-weight:700}
+
+  .field{background:#fff;border-radius:15px;padding:3px 14px 12px;margin-top:16px;box-shadow:0 2px 10px rgba(18,21,28,.07);border:1.5px solid transparent;transition:border-color .2s}
+  .field.focus{border-color:var(--red)}
+  .field label{font-size:10px;font-weight:700;color:var(--muted);display:block;padding-top:9px}
+  .field .inp{display:flex;align-items:center;gap:8px;margin-top:2px}
+  .field .cc{font:800 15px var(--font);color:var(--ink)}
+  .field input{border:0;outline:0;font:800 16.5px var(--font);letter-spacing:.5px;color:var(--ink);width:100%;background:none;font-variant-numeric:tabular-nums}
+  .normbox{background:#EDFBF3;border:1px solid #BFEAD3;border-radius:12px;padding:9px 12px;margin-top:10px;display:none}
+  .normbox.on{display:block;animation:pop .28s ease}
+  .normbox .n1{font-size:9.5px;font-weight:800;color:#0C7A3C;letter-spacing:.3px}
+  .normbox .n2{font:800 13px var(--font);color:#0C7A3C;margin-top:2px;font-variant-numeric:tabular-nums}
+  @keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+
+  .otprow{display:flex;gap:7px;margin-top:20px;justify-content:center}
+  .otp{width:40px;height:50px;border-radius:12px;background:#fff;border:1.5px solid var(--line);display:grid;place-items:center;font:800 19px var(--font);color:var(--ink);box-shadow:0 2px 8px rgba(18,21,28,.05)}
+  .otp.fill{border-color:var(--red);background:#FFF7F5}
+  .otp.cursor{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,64,42,.12)}
+
+  .btn{border:0;border-radius:15px;padding:15px;font:700 14px var(--font);cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;overflow:hidden}
+  .btn.primary{background:linear-gradient(135deg,var(--red),var(--orange));color:#fff;box-shadow:0 8px 20px rgba(232,64,42,.35)}
+  .btn.ghost{background:#fff;color:var(--ink);box-shadow:0 2px 10px rgba(18,21,28,.08)}
+  .btn:active{transform:scale(.985)}
+  .btn[disabled]{background:#E4E8F0;color:#A9B1C2;box-shadow:none;cursor:default}
+
+  .acct{background:#fff;border-radius:16px;padding:14px;margin-top:16px;box-shadow:0 3px 14px rgba(18,21,28,.08);display:flex;gap:12px;align-items:center}
+  .acct .av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--orange));display:grid;place-items:center;font:800 17px var(--font);color:#fff;flex:none}
+  .acct .nm{font-size:13.5px;font-weight:800;color:var(--ink)}
+  .acct .mt{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.5}
+  .acct .mt b{color:var(--green);font-weight:800}
+
+  .ident{display:flex;align-items:center;gap:10px;background:#fff;border-radius:13px;padding:11px 12px;margin-top:8px;box-shadow:0 2px 8px rgba(18,21,28,.06);font-size:12px;font-weight:600;color:var(--ink);animation:pop .3s ease backwards}
+  .ident .st{margin-left:auto;font:700 9.5px var(--font);padding:3px 8px;border-radius:6px}
+  .st.ok{background:#E6F7EE;color:#0C7A3C}
+  .st.pend{background:#FFF4DC;color:#B47A00}
+
+  /* ============ ANIMATED APP ============ */
+  .appbody{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;position:relative}
+  .appbody::-webkit-scrollbar{display:none}
+  .appbar{display:flex;align-items:center;gap:10px;padding:8px 16px 12px}
+  .appbar h2{font-size:17px;letter-spacing:-.2px;color:var(--ink)}
+  .icobox{width:34px;height:34px;border-radius:11px;background:#fff;display:grid;place-items:center;box-shadow:0 2px 8px rgba(18,21,28,.07);flex:none;color:var(--ink)}
+  .pane{display:none;padding:0 16px 24px;animation:fade .3s ease}
+  .pane.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .card{background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 10px rgba(18,21,28,.06);color:var(--ink)}
+  .muted{color:var(--muted)}
+  .tiny{font-size:11px}
+  .money{font-variant-numeric:tabular-nums;font-weight:800;letter-spacing:-.3px}
+  .hero2{background:linear-gradient(150deg,var(--red),#FF6A3D);border-radius:20px;padding:16px;color:#fff;position:relative;overflow:hidden}
+  .hero2:after{content:"";position:absolute;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.14);right:-60px;top:-70px}
+  .gbrow{display:flex;gap:10px;margin-top:10px}
+  .gbc{flex:1;background:#fff;border-radius:14px;padding:9px;box-shadow:0 2px 10px rgba(18,21,28,.06);color:var(--ink)}
+  .gbc .im{height:74px;border-radius:10px;background:linear-gradient(140deg,#F0F3FA,#DCE3F2);display:grid;place-items:center;font-size:28px}
+  .gbc .tt{font-size:11px;font-weight:600;margin-top:6px;line-height:1.3;height:28px;overflow:hidden}
+  .pr{color:var(--red);font-size:14px}
+  .prog{height:4px;border-radius:99px;background:#F0F2F7;margin-top:6px;overflow:hidden}
+  .prog i{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--orange));border-radius:99px}
+
+  /* ---------- TAB BAR ---------- */
+  .tabbar{flex:none;position:relative;height:70px;background:rgba(255,255,255,.96);backdrop-filter:blur(14px);border-top:1px solid var(--line);
+          display:flex;align-items:center;padding:0 6px 6px;z-index:20}
+  .pill{position:absolute;top:7px;left:0;height:54px;width:60px;border-radius:17px;
+        background:linear-gradient(135deg,rgba(232,64,42,.12),rgba(255,138,61,.16));
+        border:1.5px solid rgba(232,64,42,.22);
+        transition:left .42s cubic-bezier(.34,1.4,.5,1),width .42s cubic-bezier(.34,1.4,.5,1),border-radius .35s ease;
+        pointer-events:none;z-index:1}
+  .tab{flex:1;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;z-index:2;
+       border:0;background:none;cursor:pointer;color:#A6AEC2;font:600 9.5px var(--font);overflow:hidden;border-radius:16px;padding:0}
+  .tab svg{transition:transform .34s cubic-bezier(.34,1.4,.5,1),color .25s}
+  .tab span.lb{transition:opacity .25s,transform .3s;opacity:.85}
+  .tab.on{color:var(--red)}
+  .tab.on svg{transform:scale(1.1)}
+  .tab.on span.lb{opacity:1;font-weight:800}
+  .tab .ripple{position:absolute;border-radius:50%;background:currentColor;opacity:.3;transform:scale(0);pointer-events:none;
+               animation:rip .55s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes rip{to{transform:scale(1);opacity:0}}
+  .tab .dots{position:absolute;top:9px;right:calc(50% - 15px);width:6px;height:6px;border-radius:50%;background:var(--red);border:1.5px solid #fff}
+
+  /* FAB */
+  .fabs{position:relative;width:58px;flex:none;display:grid;place-items:center;z-index:30}
+  .fab{width:52px;height:52px;border-radius:18px;border:0;cursor:pointer;margin-top:-22px;
+       background:linear-gradient(135deg,var(--red),var(--orange));color:#fff;display:grid;place-items:center;
+       box-shadow:0 10px 24px rgba(232,64,42,.45);transition:transform .38s cubic-bezier(.34,1.5,.5,1),box-shadow .3s}
+  .fab svg{transition:transform .38s cubic-bezier(.34,1.5,.5,1)}
+  .fab.open{transform:scale(1.08);box-shadow:0 14px 30px rgba(232,64,42,.55)}
+  .fab.open svg{transform:rotate(135deg)}
+  .fabmenu{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:9px;align-items:center;pointer-events:none}
+  .fitem{display:flex;align-items:center;gap:8px;background:#fff;border-radius:14px;padding:9px 13px;white-space:nowrap;
+         box-shadow:0 8px 22px rgba(18,21,28,.18);font:700 11px var(--font);color:var(--ink);
+         opacity:0;transform:translateY(16px) scale(.9);transition:opacity .24s ease,transform .32s cubic-bezier(.34,1.5,.5,1)}
+  .fitem .f{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;font-size:13px}
+  .fabmenu.open{pointer-events:auto}
+  .fabmenu.open .fitem{opacity:1;transform:none}
+  .fabmenu.open .fitem:nth-child(3){transition-delay:.06s}
+  .fabmenu.open .fitem:nth-child(2){transition-delay:.12s}
+  .fabmenu.open .fitem:nth-child(1){transition-delay:.18s}
+  .backdrop{position:absolute;inset:0;background:rgba(11,14,20,.42);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .3s;z-index:25}
+  .backdrop.on{opacity:1;pointer-events:auto}
+
+  /* ---- section 2 : phone normalize lab ---- */
+  .panel{background:#141A26;border:1px solid #232C3E;border-radius:20px;padding:22px;margin-top:34px}
+  .panel h3{font-size:16px;color:#fff;margin-bottom:4px}
+  .panel .ps{font-size:12px;color:#8A93A8;margin-bottom:16px;line-height:1.6}
+  .labgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:820px){.labgrid{grid-template-columns:1fr}}
+  .lab input{width:100%;background:#0E141E;border:1.5px solid #2B3546;border-radius:13px;padding:14px 15px;color:#fff;
+             font:800 15px var(--font);letter-spacing:.5px;outline:0;transition:border-color .2s}
+  .lab input:focus{border-color:var(--red)}
+  .labout{margin-top:12px;background:#0E141E;border:1px solid #232C3E;border-radius:13px;padding:14px;font-size:12px;color:#C2CADB;line-height:1.9}
+  .labout .k{color:#7E89A1}
+  .labout .v{color:#fff;font-weight:800;font-variant-numeric:tabular-nums}
+  .labout .ok{color:#5FD394;font-weight:800}
+  .trylist{display:flex;flex-direction:column;gap:7px}
+  .try{display:flex;justify-content:space-between;align-items:center;background:#0E141E;border:1px solid #232C3E;border-radius:11px;
+       padding:10px 13px;font:600 12px ui-monospace,Menlo,monospace;color:#9FAAC0;cursor:pointer;transition:border-color .2s,color .2s}
+  .try:hover{border-color:var(--red);color:#fff}
+  .try .same{font:700 9.5px var(--font);color:#5FD394;background:#12291C;padding:3px 8px;border-radius:6px}
+
+  /* ---- section 3 : tokens ---- */
+  .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
+  @media(max-width:900px){.trio{grid-template-columns:1fr}}
+  .tok{background:#141A26;border:1px solid #232C3E;border-radius:18px;padding:18px}
+  .tok h4{font-size:13.5px;color:#fff;display:flex;align-items:center;gap:8px}
+  .tok .badge{font:700 8.5px var(--font);padding:3px 8px;border-radius:6px;background:#2A1B12;color:#FFB020}
+  .tok p{font-size:11.5px;color:#8A93A8;line-height:1.7;margin-top:8px}
+  .tok code{font:600 10.5px ui-monospace,Menlo,monospace;background:#0E141E;color:#FFC24A;padding:2px 6px;border-radius:5px}
+  footer{text-align:center;color:#5C657A;font-size:11px;padding:34px 20px 50px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <div class="logo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M4 7h16l-1.6 11.2a2 2 0 0 1-2 1.8H7.6a2 2 0 0 1-2-1.8L4 7Z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M8.5 7V5.5a3.5 3.5 0 1 1 7 0V7" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="9.5" cy="12" r="1.2" fill="#fff"/><circle cx="14.5" cy="12" r="1.2" fill="#fff"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Воридшавӣ + Таб-бари аниматсиядор</h1>
+      <div class="sub">Identity provider (Telegram · Google · Телефон) · рақам ҳамеша як аккаунт · Morphing · Ripple · FAB</div>
+    </div>
+  </div>
+  <div class="langbtn">
+    <button class="on" onclick="setLang('tj',this)">Тоҷикӣ</button>
+    <button onclick="setLang('ru',this)">Русский</button>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="row-phones">
+
+  <!-- ══════════════ PHONE A — AUTH ══════════════ -->
+  <div>
+    <div class="phone"><div class="notch"></div><div class="screen">
+      <div class="statusbar"><span>9:41</span><span style="font-size:10px">●●●</span></div>
+      <div class="auth">
+
+        <!-- STEP 0 : WELCOME -->
+        <div class="step on" id="s0">
+          <div class="auth-art"><div class="bag">🛍️</div></div>
+          <div class="auth-title" data-tj="Хуш омадед ба DuoBozor" data-ru="Добро пожаловать в DuoBozor">Хуш омадед ба DuoBozor</div>
+          <div class="auth-sub" data-tj="Гурӯҳ созед, нархи паст гиред — ва пулатон то лаҳзаи қабули мол дар escrow ҳифз мешавад." data-ru="Соберите группу, получите низкую цену — деньги хранятся в escrow до получения товара.">Гурӯҳ созед, нархи паст гиред — ва пулатон то лаҳзаи қабули мол дар escrow ҳифз мешавад.</div>
+
+          <div class="prov primary" onclick="go('s1')">
+            <div class="ic">✈️</div>
+            <div><span data-tj="Идома бо Telegram" data-ru="Продолжить с Telegram">Идома бо Telegram</span><span class="rec" data-tj="ТЕЗ" data-ru="БЫСТРО">ТЕЗ</span></div>
+            <div class="arrow">›</div>
+          </div>
+          <div class="prov" onclick="go('s1')">
+            <div class="ic" style="background:#EAF1FE">
+              <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M45 24c0-1.6-.1-2.7-.4-4H24v8h12c-.2 2-1.5 5-4.4 7l6.7 5.2C42.2 36.3 45 30.8 45 24z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.3-5.3l-6.7-5.2C29.7 36.7 27.1 37.6 24 37.6c-5.8 0-10.7-3.9-12.5-9.1l-7 5.4C8 40.2 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.5 28.5c-.5-1.4-.8-2.9-.8-4.5s.3-3.1.8-4.5l-7-5.4C3 17.1 2 20.4 2 24s1 6.9 2.5 9.9l7-5.4z"/><path fill="#EA4335" d="M24 10.4c3.3 0 6.2 1.1 8.5 3.3l6-6C34.9 4.2 29.9 2 24 2 15.4 2 8 7.8 4.5 14.1l7 5.4C13.3 14.3 18.2 10.4 24 10.4z"/></svg>
+            </div>
+            <div data-tj="Идома бо Google" data-ru="Продолжить с Google">Идома бо Google</div>
+            <div class="arrow">›</div>
+          </div>
+          <div class="prov" onclick="go('s2')">
+            <div class="ic" style="background:#FDEAE7">📱</div>
+            <div data-tj="Идома бо рақами телефон" data-ru="Продолжить с номером телефона">Идома бо рақами телефон</div>
+            <div class="arrow">›</div>
+          </div>
+          <div class="prov" onclick="go('s2')">
+            <div class="ic" style="background:#F2F4F8">🍎</div>
+            <div data-tj="Apple (танҳо iOS)" data-ru="Apple (только iOS)">Apple (танҳо iOS)</div>
+            <div class="arrow">›</div>
+          </div>
+
+          <div class="legal" data-tj="Давом дода, шумо <b>Шартҳои истифода</b> ва <b>Сиёсати махфият</b>-ро қабул мекунед." data-ru="Продолжая, вы принимаете <b>Условия</b> и <b>Политику конфиденциальности</b>.">Давом дода, шумо <b>Шартҳои истифода</b> ва <b>Сиёсати махфият</b>-ро қабул мекунед.</div>
+        </div>
+
+        <!-- STEP 1 : OAUTH (Telegram/Google) → linking -->
+        <div class="step" id="s1">
+          <div style="display:flex;align-items:center;gap:10px;padding-top:4px">
+            <div class="icobox" onclick="go('s0')" style="width:34px;height:34px;border-radius:11px;background:#fff;display:grid;place-items:center;box-shadow:0 2px 8px rgba(18,21,28,.07);cursor:pointer">‹</div>
+          </div>
+          <div style="text-align:center;margin-top:26px">
+            <div style="width:76px;height:76px;border-radius:26px;background:linear-gradient(135deg,var(--tg),#1C8FD0);display:grid;place-items:center;font-size:34px;margin:0 auto;box-shadow:0 12px 28px rgba(42,171,238,.35)">✈️</div>
+            <div class="auth-title" style="margin-top:16px" data-tj="Telegram тасдиқ шуд" data-ru="Telegram подтверждён">Telegram тасдиқ шуд</div>
+            <div class="auth-sub" data-tj="@farzona_tj · ID 481920337" data-ru="@farzona_tj · ID 481920337">@farzona_tj · ID 481920337</div>
+          </div>
+
+          <div class="acct" style="margin-top:26px">
+            <div class="av">Ф</div>
+            <div>
+              <div class="nm" data-tj="Ҳисоби шумо ёфт шуд" data-ru="Ваш аккаунт найден">Ҳисоби шумо ёфт шуд</div>
+              <div class="mt" data-tj="Фарзона · аз октябри 2024<br><b>247 фармоиш</b> · бақия 342.50 c." data-ru="Фарзона · с октября 2024<br><b>247 заказов</b> · баланс 342.50 c.">Фарзона · аз октябри 2024<br><b>247 фармоиш</b> · бақия 342.50 c.</div>
+            </div>
+          </div>
+
+          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-top:18px" data-tj="Калидҳои пайвастшуда" data-ru="Привязанные ключи">Калидҳои пайвастшуда</div>
+          <div class="ident" style="animation-delay:.05s"><span>✈️</span> @farzona_tj <span class="st ok" data-tj="Тасдиқ" data-ru="Ок">Тасдиқ</span></div>
+          <div class="ident" style="animation-delay:.12s"><span>📱</span> +992 92 *** 45 67 <span class="st ok" data-tj="Тасдиқ" data-ru="Ок">Тасдиқ</span></div>
+          <div class="ident" style="animation-delay:.19s"><span>🔵</span> farzona@gmail.com <span class="st pend" data-tj="Пайваст кун" data-ru="Привязать">Пайваст кун</span></div>
+
+          <button class="btn primary" style="margin-top:auto" onclick="go('s4')" data-tj="✓ Давом додан" data-ru="✓ Продолжить">✓ Давом додан</button>
+        </div>
+
+        <!-- STEP 2 : PHONE -->
+        <div class="step" id="s2">
+          <div style="display:flex;align-items:center;gap:10px;padding-top:4px">
+            <div onclick="go('s0')" style="width:34px;height:34px;border-radius:11px;background:#fff;display:grid;place-items:center;box-shadow:0 2px 8px rgba(18,21,28,.07);cursor:pointer">‹</div>
+          </div>
+          <div class="auth-title" style="margin-top:22px;text-align:left" data-tj="Рақами телефон" data-ru="Номер телефона">Рақами телефон</div>
+          <div class="auth-sub" style="text-align:left" data-tj="Ҳар формат кор мекунад: 92 123 45 67 · 0921234567 · +992…" data-ru="Любой формат работает: 92 123 45 67 · 0921234567 · +992…">Ҳар формат кор мекунад: 92 123 45 67 · 0921234567 · +992…</div>
+
+          <div class="field" id="fld">
+            <label data-tj="РАҚАМ" data-ru="НОМЕР">РАҚАМ</label>
+            <div class="inp"><span class="cc">+992</span><input id="phoneInp" inputmode="tel" placeholder="92 123 45 67" value=""></div>
+          </div>
+
+          <div class="normbox" id="normbox">
+            <div class="n1" data-tj="✓ ФОРМАТ МУАЙЯН ШУД · E.164" data-ru="✓ ФОРМАТ ОПРЕДЕЛЁН · E.164">✓ ФОРМАТ МУАЙЯН ШУД · E.164</div>
+            <div class="n2" id="normVal">+992921234567</div>
+          </div>
+
+          <div class="acct" id="acctFound" style="display:none">
+            <div class="av">Ф</div>
+            <div>
+              <div class="nm" data-tj="Ин аккаунт мавҷуд аст" data-ru="Этот аккаунт существует">Ин аккаунт мавҷуд аст</div>
+              <div class="mt" data-tj="Фарзона · <b>247 фармоиш</b> · бақия 342.50 c.<br>Фармоишҳои кӯҳна ҷояшон мемонанд." data-ru="Фарзона · <b>247 заказов</b> · баланс 342.50 c.<br>Старые заказы останутся на месте.">Фарзона · <b>247 фармоиш</b> · бақия 342.50 c.<br>Фармоишҳои кӯҳна ҷояшон мемонанд.</div>
+            </div>
+          </div>
+
+          <button class="btn primary" id="btnOtp" style="margin-top:auto" disabled onclick="go('s3')" data-tj="Гирифтани код" data-ru="Получить код">Гирифтани код</button>
+        </div>
+
+        <!-- STEP 3 : OTP -->
+        <div class="step" id="s3">
+          <div style="display:flex;align-items:center;gap:10px;padding-top:4px">
+            <div onclick="go('s2')" style="width:34px;height:34px;border-radius:11px;background:#fff;display:grid;place-items:center;box-shadow:0 2px 8px rgba(18,21,28,.07);cursor:pointer">‹</div>
+          </div>
+          <div class="auth-title" style="margin-top:22px;text-align:left" data-tj="Коди тасдиқ" data-ru="Код подтверждения">Коди тасдиқ</div>
+          <div class="auth-sub" style="text-align:left" data-tj="Ба +992 92 *** 45 67 фиристода шуд" data-ru="Отправлен на +992 92 *** 45 67">Ба +992 92 *** 45 67 фиристода шуд</div>
+
+          <div class="otprow">
+            <div class="otp fill">4</div><div class="otp fill">8</div><div class="otp fill">1</div>
+            <div class="otp cursor">9</div><div class="otp"></div><div class="otp"></div>
+          </div>
+
+          <div style="text-align:center;font-size:11.5px;color:var(--muted);margin-top:16px" data-tj="Аз нав фиристодан: 0:42" data-ru="Отправить повторно: 0:42">Аз нав фиристодан: 0:42</div>
+
+          <div style="background:#EDFBF3;border-radius:13px;padding:11px 13px;margin-top:20px;font-size:10.5px;color:#0C7A3C;line-height:1.6" data-tj="🛡️ Ин рақам ба ҳисоби шумо бо 247 фармоиш пайваст аст. Кодро ба касе надиҳед — кормандони мо ҳеҷ гоҳ онро напурсанд." data-ru="🛡️ Этот номер привязан к вашему аккаунту с 247 заказами. Никому не сообщайте код — наши сотрудники его не спрашивают.">🛡️ Ин рақам ба ҳисоби шумо бо 247 фармоиш пайваст аст. Кодро ба касе надиҳед — кормандони мо ҳеҷ гоҳ онро напурсанд.</div>
+
+          <button class="btn primary" style="margin-top:auto" onclick="go('s4')" data-tj="✓ Тасдиқ кардан" data-ru="✓ Подтвердить">✓ Тасдиқ кардан</button>
+        </div>
+
+        <!-- STEP 4 : HOME WITH ANIMATED TAB BAR -->
+        <div class="step" id="s4" style="padding:0;background:var(--bg)">
+          <div class="appbody">
+            <div class="appbar" style="padding-top:8px">
+              <div class="icobox">‹</div>
+              <h2 style="flex:1" data-tj="DuoBozor" data-ru="DuoBozor">DuoBozor</h2>
+              <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--orange));display:grid;place-items:center;font:800 12px var(--font);color:#fff">Ф</div>
+            </div>
+
+            <div class="pane on" data-pane="0">
+              <div class="hero2">
+                <div style="font-size:11px;opacity:.9" data-tj="Хуш омадӣ боз, Фарзона" data-ru="С возвращением, Фарзона">Хуш омадӣ боз, Фарзона</div>
+                <div style="font-size:19px;font-weight:800;letter-spacing:-.4px;margin-top:2px" data-tj="3 гурӯҳи фаъол доред" data-ru="У вас 3 активные группы">3 гурӯҳи фаъол доред</div>
+                <div style="font-size:10.5px;opacity:.92;margin-top:6px" data-tj="2 нафар монд — гурӯҳ пурра мешавад" data-ru="Осталось 2 человека — группа соберётся">2 нафар монд — гурӯҳ пурра мешавад</div>
+              </div>
+              <div class="gbrow">
+                <div class="gbc"><div class="im">👟</div><div class="tt" data-tj="Пойафзоли варзишӣ" data-ru="Кроссовки">Пойафзоли варзишӣ</div><div class="money pr">149 c.</div><div class="prog"><i style="width:66%"></i></div></div>
+                <div class="gbc"><div class="im">🎧</div><div class="tt" data-tj="Гӯшмонаки бесим" data-ru="Наушники">Гӯшмонаки бесим</div><div class="money pr">89 c.</div><div class="prog"><i style="width:40%"></i></div></div>
+              </div>
+              <div class="card" style="margin-top:12px;display:flex;gap:10px;align-items:center">
+                <div style="font-size:20px">🛡️</div>
+                <div><div style="font-size:11.5px;font-weight:800" data-tj="Escrow фаъол аст" data-ru="Escrow активен">Escrow фаъол аст</div><div class="tiny muted" data-tj="278.00 c. дар ҳифз" data-ru="278.00 c. под защитой">278.00 c. дар ҳифз</div></div>
+              </div>
+            </div>
+
+            <div class="pane" data-pane="1">
+              <div class="card"><div style="font-size:12.5px;font-weight:800" data-tj="Ҷустуҷӯ" data-ru="Поиск">Ҷустуҷӯ</div><div class="tiny muted" style="margin-top:5px" data-tj="Мол, дӯкон, категория…" data-ru="Товар, магазин, категория…">Мол, дӯкон, категория…</div></div>
+              <div class="gbrow" style="margin-top:12px"><div class="gbc"><div class="im">🧥</div><div class="tt" data-tj="Куртаи тирамоҳӣ" data-ru="Куртка">Куртаи тирамоҳӣ</div><div class="money pr">210 c.</div></div><div class="gbc"><div class="im">🫖</div><div class="tt" data-tj="Чойник 1.5л" data-ru="Чайник 1.5л">Чойник 1.5л</div><div class="money pr">62 c.</div></div></div>
+            </div>
+
+            <div class="pane" data-pane="2">
+              <div class="card">
+                <div style="font-size:12.5px;font-weight:800;margin-bottom:10px" data-tj="Сабад (2)" data-ru="Корзина (2)">Сабад (2)</div>
+                <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px"><div style="width:44px;height:44px;border-radius:11px;background:#EEF1F8;display:grid;place-items:center">👟</div><div style="flex:1"><div style="font-size:11.5px;font-weight:700" data-tj="Пойафзол, андозаи 39" data-ru="Кроссовки, 39">Пойафзол, андозаи 39</div><div class="tiny muted">149 c. × 1</div></div></div>
+                <div style="display:flex;font-size:12px;justify-content:space-between;border-top:1px dashed var(--line);padding-top:9px"><b data-tj="Ҳамагӣ" data-ru="Итого">Ҳамагӣ</b><b class="money" style="color:var(--red)">278.00 c.</b></div>
+              </div>
+            </div>
+
+            <div class="pane" data-pane="3">
+              <div class="card"><div style="font-size:12.5px;font-weight:800" data-tj="Фармоишҳои ман" data-ru="Мои заказы">Фармоишҳои ман</div>
+                <div class="tiny muted" style="margin-top:6px" data-tj="#DB-000417 · дар роҳ · 278.00 c." data-ru="#DB-000417 · в пути · 278.00 c.">#DB-000417 · дар роҳ · 278.00 c.</div>
+                <div class="tiny muted" style="margin-top:4px" data-tj="#DB-000402 · анҷом · кэшбэк +3.10" data-ru="#DB-000402 · завершён · кэшбэк +3.10">#DB-000402 · анҷом · кэшбэк +3.10</div>
+              </div>
+            </div>
+
+            <div class="pane" data-pane="4">
+              <div class="card">
+                <div style="display:flex;gap:11px;align-items:center"><div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--orange));display:grid;place-items:center;font:800 16px var(--font);color:#fff">Ф</div>
+                  <div><div style="font-size:13px;font-weight:800" data-tj="Фарзона Раҳимова" data-ru="Фарзона Рахимова">Фарзона Раҳимова</div><div class="tiny muted">+992 92 *** 45 67</div></div></div>
+                <div style="border-top:1px solid var(--line);margin-top:12px;padding-top:10px;font-size:11.5px;line-height:2.1">
+                  <div style="display:flex;justify-content:space-between"><span class="muted" data-tj="✈️ Telegram" data-ru="✈️ Telegram">✈️ Telegram</span><b style="color:var(--green)" data-tj="Пайваст" data-ru="Привязан">Пайваст</b></div>
+                  <div style="display:flex;justify-content:space-between"><span class="muted" data-tj="🔵 Google" data-ru="🔵 Google">🔵 Google</span><b style="color:var(--green)" data-tj="Пайваст" data-ru="Привязан">Пайваст</b></div>
+                  <div style="display:flex;justify-content:space-between"><span class="muted" data-tj="🔐 2FA" data-ru="🔐 2FA">🔐 2FA</span><b data-tj="Фаъол" data-ru="Вкл">Фаъол</b></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="backdrop" id="backdrop" onclick="toggleFab()"></div>
+
+          <div class="tabbar" id="tabbar">
+            <div class="pill" id="pill"></div>
+            <button class="tab on" data-tab="0" data-label="Асосӣ">
+              <svg width="21" height="21" viewBox="0 0 20 20" fill="none"><path d="M3 8.5 10 3l7 5.5V16a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 16V8.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+              <span class="lb" data-tj="Асосӣ" data-ru="Главная">Асосӣ</span>
+            </button>
+            <button class="tab" data-tab="1" data-label="Ҷустуҷӯ">
+              <svg width="21" height="21" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5" stroke="currentColor" stroke-width="1.7"/><path d="M12.4 12.4 17 17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+              <span class="lb" data-tj="Ҷустуҷӯ" data-ru="Поиск">Ҷустуҷӯ</span>
+            </button>
+
+            <div class="fabs">
+              <div class="fabmenu" id="fabmenu">
+                <div class="fitem"><div class="f" style="background:#FDEAE7">👥</div><span data-tj="Гурӯҳ соз" data-ru="Создать группу">Гурӯҳ соз</span></div>
+                <div class="fitem"><div class="f" style="background:#EAF1FE">📷</div><span data-tj="Сканери QR" data-ru="QR-сканер">Сканери QR</span></div>
+                <div class="fitem"><div class="f" style="background:#FFF4DC">🎁</div><span data-tj="Дӯстро даъват кун" data-ru="Пригласить друга">Дӯстро даъват кун</span></div>
+              </div>
+              <button class="fab" id="fab" onclick="toggleFab()" aria-label="+">
+                <svg width="22" height="22" viewBox="0 0 20 20"><path d="M10 4v12M4 10h12" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+
+            <button class="tab" data-tab="2" data-label="Сабад">
+              <span class="dots"></span>
+              <svg width="21" height="21" viewBox="0 0 20 20" fill="none"><path d="M6 7V6a4 4 0 0 1 8 0v1" stroke="currentColor" stroke-width="1.7"/><rect x="3.5" y="7" width="13" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/></svg>
+              <span class="lb" data-tj="Сабад" data-ru="Корзина">Сабад</span>
+            </button>
+            <button class="tab" data-tab="3" data-label="Фармоиш">
+              <svg width="21" height="21" viewBox="0 0 20 20" fill="none"><rect x="3.5" y="3" width="13" height="14" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M7 7.5h6M7 11h6M7 14.5h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <span class="lb" data-tj="Фармоиш" data-ru="Заказы">Фармоиш</span>
+            </button>
+            <button class="tab" data-tab="4" data-label="Ман">
+              <svg width="21" height="21" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M4 17c0-3.3 2.7-5.2 6-5.2s6 1.9 6 5.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+              <span class="lb" data-tj="Ман" data-ru="Профиль">Ман</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div></div>
+    <div class="cap">A · Воридшавӣ <span data-tj="Telegram / Google / Телефон → як аккаунт. Пахш кунед: 📱 Телефон" data-ru="Telegram / Google / Телефон → один аккаунт. Нажмите: 📱 Телефон">Telegram / Google / Телефон → як аккаунт. Пахш кунед: 📱 Телефон</span></div>
+  </div>
+
+  <!-- ══════════════ PHONE B — SAME APP, FOCUS ON TABBAR ══════════════ -->
+  <div>
+    <div class="phone"><div class="notch"></div><div class="screen">
+      <div class="statusbar"><span>9:41</span><span style="font-size:10px">●●●</span></div>
+
+      <div class="appbody">
+        <div class="appbar">
+          <h2 style="flex:1" data-tj="Таб-барро санҷед" data-ru="Проверьте таб-бар">Таб-барро санҷед</h2>
+          <span style="font:700 9px var(--font);background:#FFF4DC;color:#B47A00;padding:4px 8px;border-radius:7px" data-tj="DEMO" data-ru="ДЕМО">DEMO</span>
+        </div>
+
+        <div style="padding:0 16px 20px">
+          <div class="card" style="border:1.5px dashed #DDE3EF;box-shadow:none;background:#FBFCFE">
+            <div style="font-size:12px;font-weight:800;color:var(--ink)" data-tj="1 · Morphing Animation" data-ru="1 · Morphing Animation">1 · Morphing Animation</div>
+            <div class="tiny muted" style="margin-top:4px;line-height:1.6" data-tj="Индикатори ягона ҳангоми ивазшавии таб васеъ ва ҷой иваз мекунад (spring, 420ms)." data-ru="Единый индикатор при смене таба расширяется и перемещается (spring, 420ms).">Индикатори ягона ҳангоми ивазшавии таб васеъ ва ҷой иваз мекунад (spring, 420ms).</div>
+          </div>
+          <div class="card" style="border:1.5px dashed #DDE3EF;box-shadow:none;background:#FBFCFE;margin-top:9px">
+            <div style="font-size:12px;font-weight:800;color:var(--ink)" data-tj="2 · Ripple Effect" data-ru="2 · Ripple Effect">2 · Ripple Effect</div>
+            <div class="tiny muted" style="margin-top:4px;line-height:1.6" data-tj="Аз нуқтаи пахш доира васеъ мешавад (+ Haptics). Бингар: пахш кун." data-ru="Волна расходится из точки нажатия (+ Haptics). Попробуйте.">Аз нуқтаи пахш доира васеъ мешавад (+ Haptics). Бингар: пахш кун.</div>
+          </div>
+          <div class="card" style="border:1.5px dashed #DDE3EF;box-shadow:none;background:#FBFCFE;margin-top:9px">
+            <div style="font-size:12px;font-weight:800;color:var(--ink)" data-tj="3 · Floating Action Button" data-ru="3 · Floating Action Button">3 · Floating Action Button</div>
+            <div class="tiny muted" style="margin-top:4px;line-height:1.6" data-tj="Тугмаи марказӣ → менюи 3 амал бо stagger 60ms ва гардиши 135°." data-ru="Центральная кнопка → меню из 3 действий со stagger 60ms и поворотом 135°.">Тугмаи марказӣ → менюи 3 амал бо stagger 60ms ва гардиши 135°.</div>
+          </div>
+
+          <div style="margin-top:14px;font:700 10px var(--font);color:var(--muted);letter-spacing:.6px;text-transform:uppercase" data-tj="Ҳолатҳо" data-ru="Состояния">Ҳолатҳо</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+            <span style="font:700 9.5px var(--font);padding:5px 9px;border-radius:8px;background:#E6F7EE;color:#0C7A3C" data-tj="● active" data-ru="● active">● active</span>
+            <span style="font:700 9.5px var(--font);padding:5px 9px;border-radius:8px;background:#F2F4F8;color:#5A6478" data-tj="○ inactive" data-ru="○ inactive">○ inactive</span>
+            <span style="font:700 9.5px var(--font);padding:5px 9px;border-radius:8px;background:#FDEAE7;color:var(--red)" data-tj="● badge" data-ru="● badge">● badge</span>
+            <span style="font:700 9.5px var(--font);padding:5px 9px;border-radius:8px;background:#FFF4DC;color:#B47A00" data-tj="◐ pressed" data-ru="◐ pressed">◐ pressed</span>
+          </div>
+
+          <div class="card" style="margin-top:14px;background:#12151C;color:#DDE3EE">
+            <div style="font:700 10px var(--font);color:#8A93A8;text-transform:uppercase;letter-spacing:.6px" data-tj="Тавсияи техникӣ" data-ru="Техническая рекомендация">Тавсияи техникӣ</div>
+            <div style="font:600 10.5px ui-monospace,Menlo,monospace;color:#FFC24A;margin-top:8px;line-height:1.9">
+              react-native-reanimated 3.x<br>
+              withSpring(damping 18, stiffness 220)<br>
+              expo-haptics · selectionAsync()<br>
+              useNativeDriver → UI thread
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="backdrop" id="backdrop2" onclick="toggleFab2()"></div>
+
+      <div class="tabbar" id="tabbar2">
+        <div class="pill" id="pill2"></div>
+        <button class="tab on" data-tab="0">
+          <svg width="21" height="21" viewBox="0 0 20 20" fill="none"><path d="M3 8.5 10 3l7 5.5V16a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 16V8.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+          <span class="lb" data-tj="Асосӣ" data-ru="Главная">Асосӣ</span>
+        </button>
+        <button class="tab" data-tab="1">
+          <svg width="21" height="21" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5" stroke="currentColor" stroke-width="1.7"/><path d="M12.4 12.4 17 17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          <span class="lb" data-tj="Ҷустуҷӯ" data-ru="Поиск">Ҷустуҷӯ</span>
+        </button>
+        <div class="fabs">
+          <div class="fabmenu" id="fabmenu2">
+            <div class="fitem"><div class="f" style="background:#FDEAE7">👥</div><span data-tj="Гурӯҳ соз" data-ru="Создать группу">Гурӯҳ соз</span></div>
+            <div class="fitem"><div class="f" style="background:#EAF1FE">📷</div><span data-tj="Сканери QR" data-ru="QR-сканер">Сканери QR</span></div>
+            <div class="fitem"><div class="f" style="background:#FFF4DC">🎁</div><span data-tj="Дӯстро даъват кун" data-ru="Пригласить друга">Дӯстро даъват кун</span></div>
+          </div>
+          <button class="fab" id="fab2" onclick="toggleFab2()" aria-label="+">
+            <svg width="22" height="22" viewBox="0 0 20 20"><path d="M10 4v12M4 10h12" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <button class="tab" data-tab="2">
+          <svg width="21" height="21" viewBox="0 0 20 20" fill="none"><path d="M6 7V6a4 4 0 0 1 8 0v1" stroke="currentColor" stroke-width="1.7"/><rect x="3.5" y="7" width="13" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/></svg>
+          <span class="lb" data-tj="Сабад" data-ru="Корзина">Сабад</span>
+        </button>
+        <button class="tab" data-tab="3">
+          <svg width="21" height="21" viewBox="0 0 20 20" fill="none"><rect x="3.5" y="3" width="13" height="14" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M7 7.5h6M7 11h6M7 14.5h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span class="lb" data-tj="Фармоиш" data-ru="Заказы">Фармоиш</span>
+        </button>
+        <button class="tab" data-tab="4">
+          <svg width="21" height="21" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M4 17c0-3.3 2.7-5.2 6-5.2s6 1.9 6 5.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          <span class="lb" data-tj="Ман" data-ru="Профиль">Ман</span>
+        </button>
+      </div>
+    </div></div>
+    <div class="cap">B · Аниматсияҳо <span data-tj="Пахш кун: табҳо, тугмаи FAB, ripple" data-ru="Нажимайте: табы, кнопка FAB, ripple">Пахш кун: табҳо, тугмаи FAB, ripple</span></div>
+  </div>
+
+</div>
+
+<!-- ══════════════ PHONE NORMALIZATION LAB ══════════════ -->
+<div class="panel lab">
+  <h3 data-tj="🧪 Лаборатория: «рақам формат шавад»" data-ru="🧪 Лаборатория: «номер в другом формате»">🧪 Лаборатория: «рақам формат шавад»</h3>
+  <div class="ps" data-tj="Ҳар як вариант нависед — система онро ба E.164 меорад ва ҳамон як аккаунти Фарзонаро меёбад. Фармоишҳо (247) боқӣ мемонанд." data-ru="Введите любой вариант — система приводит его к E.164 и находит тот же аккаунт Фарзоны. Заказы (247) сохраняются.">Ҳар як вариант нависед — система онро ба E.164 меорад ва ҳамон як аккаунти Фарзонаро меёбад. Фармоишҳо (247) боқӣ мемонанд.</div>
+
+  <div class="labgrid">
+    <div>
+      <input id="labphone" value="8 (92) 123 45 67" spellcheck="false">
+      <div class="labout">
+        <div><span class="k">input</span> → <span class="v" id="labRaw">8 (92) 123 45 67</span></div>
+        <div><span class="k">normalize_phone()</span> → <span class="v" id="labNorm">+992921234567</span></div>
+        <div><span class="k">auth_identities</span> → <span class="v">provider='phone', uid='+992921234567'</span></div>
+        <div><span class="k">user_id</span> → <span class="v">7f3a-…-c91d</span></div>
+        <div><span class="k">натиҷа</span> → <span class="ok" data-tj="✓ Фарзона · 247 фармоиш · бақия 342.50 c." data-ru="✓ Фарзона · 247 заказов · баланс 342.50 c.">✓ Фарзона · 247 фармоиш · бақия 342.50 c.</span></div>
+      </div>
+    </div>
+    <div class="trylist">
+      <div class="try" onclick="tryPhone('992921234567')"><span>992921234567</span><span class="same" data-tj="як аккаунт" data-ru="тот же аккаунт">як аккаунт</span></div>
+      <div class="try" onclick="tryPhone('+992 92 123-45-67')"><span>+992 92 123-45-67</span><span class="same" data-tj="як аккаунт" data-ru="тот же аккаунт">як аккаунт</span></div>
+      <div class="try" onclick="tryPhone('0921234567')"><span>0921234567</span><span class="same" data-tj="як аккаунт" data-ru="тот же аккаунт">як аккаунт</span></div>
+      <div class="try" onclick="tryPhone('921234567')"><span>921234567</span><span class="same" data-tj="як аккаунт" data-ru="тот же аккаунт">як аккаунт</span></div>
+      <div class="try" onclick="tryPhone('00992 92 123 45 67')"><span>00992 92 123 45 67</span><span class="same" data-tj="як аккаунт" data-ru="тот же аккаунт">як аккаунт</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ TOKENS ══════════════ -->
+<div class="trio">
+  <div class="tok">
+    <h4><span>🫧</span> Morphing <span class="badge">420ms</span></h4>
+    <p data-tj="Як индикатор ба ҷои 5 то. <code>left</code>, <code>width</code>, <code>borderRadius</code> — бо spring. Иконка <code>scale 1.1</code>, матн бо <code>opacity</code>." data-ru="Один индикатор вместо 5. <code>left</code>, <code>width</code>, <code>borderRadius</code> — spring. Иконка <code>scale 1.1</code>, текст через <code>opacity</code>.">Як индикатор ба ҷои 5 то. <code>left</code>, <code>width</code>, <code>borderRadius</code> — бо spring. Иконка <code>scale 1.1</code>, матн бо <code>opacity</code>.</p>
+  </div>
+  <div class="tok">
+    <h4><span>💧</span> Ripple <span class="badge">550ms</span></h4>
+    <p data-tj="Аз нуқтаи пахш: <code>scale 0→1</code>, <code>opacity .3→0</code>. Дар дохили таб <code>overflow:hidden</code>. + <code>Haptics.selectionAsync()</code>." data-ru="Из точки нажатия: <code>scale 0→1</code>, <code>opacity .3→0</code>. Внутри таба <code>overflow:hidden</code>. + <code>Haptics.selectionAsync()</code>.">Аз нуқтаи пахш: <code>scale 0→1</code>, <code>opacity .3→0</code>. Дар дохили таб <code>overflow:hidden</code>. + <code>Haptics.selectionAsync()</code>.</p>
+  </div>
+  <div class="tok">
+    <h4><span>➕</span> FAB <span class="badge">stagger 60ms</span></h4>
+    <p data-tj="Гардиш <code>0→135°</code>, <code>scale 1.08</code>, меню <code>translateY 16→0</code> бо таъхири зинавӣ. Backdrop + blur." data-ru="Поворот <code>0→135°</code>, <code>scale 1.08</code>, меню <code>translateY 16→0</code> со ступенчатой задержкой. Backdrop + blur.">Гардиш <code>0→135°</code>, <code>scale 1.08</code>, меню <code>translateY 16→0</code> бо таъхири зинавӣ. Backdrop + blur.</p>
+  </div>
+</div>
+</div>
+
+<footer>DuoBozor · auth + tab bar demo · 23.10.2026</footer>
+
+<script>
+/* ---------- language ---------- */
+function setLang(l, btn){
+  document.querySelectorAll('.langbtn button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); document.documentElement.lang = l;
+  document.querySelectorAll('[data-tj]').forEach(el=>{
+    const v = el.getAttribute('data-'+l);
+    if(v) el.innerHTML = v;
+  });
+}
+
+/* ---------- auth steps ---------- */
+function go(id){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  if(id==='s4') requestAnimationFrame(()=>{ movePill(document.querySelector('#tabbar .tab.on')); });
+}
+
+/* ---------- phone normalization (same logic as SQL) ---------- */
+function normalize(p){
+  let d = String(p||'').replace(/[^0-9]/g,'');
+  if(d.startsWith('00')) d = d.slice(2);
+  if(d.length===9) d = '992'+d;
+  if(d.length===10 && d[0]==='0') d = '992'+d.slice(1);
+  if((d.length===10||d.length===11) && d[0]==='8') d = '992'+d.slice(1);
+  return d ? '+'+d : '';
+}
+const inp = document.getElementById('phoneInp');
+inp.addEventListener('input', ()=>{
+  const n = normalize(inp.value);
+  const box = document.getElementById('normbox');
+  const btn = document.getElementById('btnOtp');
+  const acct = document.getElementById('acctFound');
+  if(n.length >= 12){
+    document.getElementById('normVal').textContent = n;
+    box.classList.add('on'); acct.style.display='flex';
+    btn.disabled = false;
+  } else { box.classList.remove('on'); acct.style.display='none'; btn.disabled = true; }
+});
+inp.addEventListener('focus', ()=>document.getElementById('fld').classList.add('focus'));
+inp.addEventListener('blur', ()=>document.getElementById('fld').classList.remove('focus'));
+
+function tryPhone(v){
+  document.getElementById('labphone').value = v;
+  document.getElementById('labRaw').textContent = v;
+  document.getElementById('labNorm').textContent = normalize(v);
+}
+
+/* ---------- tab bar : morph + ripple ---------- */
+function setupTabbar(barId){
+  const bar = document.getElementById(barId);
+  if(!bar) return;
+  const pill = bar.querySelector('.pill');
+  const tabs = [...bar.querySelectorAll('.tab')];
+
+  function movePill(tab){
+    if(!tab) return;
+    const r = tab.getBoundingClientRect(), br = bar.getBoundingClientRect();
+    const w = Math.max(52, r.width - 12);
+    pill.style.width = w + 'px';
+    pill.style.left = (r.left - br.left + (r.width - w)/2) + 'px';
+    pill.style.borderRadius = w > 62 ? '17px' : '15px';
+  }
+  window.addEventListener('resize', ()=>movePill(bar.querySelector('.tab.on')));
+
+  tabs.forEach(tab=>{
+    tab.addEventListener('click', e=>{
+      tabs.forEach(t=>t.classList.remove('on'));
+      tab.classList.add('on');
+      movePill(tab);
+      ripple(tab, e);
+      haptic();
+      // pane switching (only phone A has panes)
+      const idx = tab.dataset.tab;
+      const scope = bar.closest('.screen');
+      scope.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on', p.dataset.pane === idx));
+      const body = scope.querySelector('.appbody');
+      if(body) body.scrollTop = 0;
+    });
+  });
+
+  function ripple(tab, e){
+    const r = tab.getBoundingClientRect();
+    const size = Math.max(r.width, r.height) * 2;
+    const x = (e.clientX || r.left + r.width/2) - r.left - size/2;
+    const y = (e.clientY || r.top + r.height/2) - r.top - size/2;
+    const s = document.createElement('span');
+    s.className = 'ripple';
+    s.style.width = s.style.height = size + 'px';
+    s.style.left = x + 'px'; s.style.top = y + 'px';
+    tab.appendChild(s);
+    setTimeout(()=>s.remove(), 600);
+  }
+  // initial
+  requestAnimationFrame(()=>movePill(bar.querySelector('.tab.on')));
+}
+function haptic(){ if(navigator.vibrate) navigator.vibrate(8); }
+
+/* ---------- FAB ---------- */
+function toggleFab(){
+  const m = document.getElementById('fabmenu'), f = document.getElementById('fab'), b = document.getElementById('backdrop');
+  const open = !m.classList.contains('open');
+  m.classList.toggle('open', open); f.classList.toggle('open', open); b.classList.toggle('on', open);
+  haptic();
+}
+function toggleFab2(){
+  const m = document.getElementById('fabmenu2'), f = document.getElementById('fab2'), b = document.getElementById('backdrop2');
+  const open = !m.classList.contains('open');
+  m.classList.toggle('open', open); f.classList.toggle('open', open); b.classList.toggle('on', open);
+  haptic();
+}
+
+/* ---------- init ---------- */
+setupTabbar('tabbar');
+setupTabbar('tabbar2');
+tryPhone('8 (92) 123 45 67');
+</script>
+</body>
+</html>

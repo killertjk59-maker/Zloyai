@@ -1,0 +1,14 @@
+{
+  "name": "duobozor-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bash run_all.sh",
+    "schema": "node pg/run_schema.mjs",
+    "ts": "node ts_syntax.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.0",
+    "typescript": "^5.6.0"
+  }
+}

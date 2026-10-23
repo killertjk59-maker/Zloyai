@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="tj">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DuoBozor — Mockup / Дизайн-система</title>
+<style>
+  :root{
+    --red:#E8402A; --red-dark:#C22F1C; --orange:#FF8A3D; --gold:#FFB020;
+    --ink:#12151C; --ink-2:#2A3040; --muted:#7A8299; --line:#E7E9F0;
+    --bg:#F5F6FA; --white:#fff; --green:#12A150; --green-soft:#E6F7EE;
+    --blue:#2F6FED; --blue-soft:#EAF1FE; --radius:18px;
+    --shadow:0 10px 30px rgba(18,21,28,.10);
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:#0B0E14;color:var(--ink);-webkit-font-smoothing:antialiased}
+
+  /* ---------- page chrome ---------- */
+  header.top{padding:34px 28px 22px;max-width:1500px;margin:0 auto;display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,var(--red),var(--orange));display:grid;place-items:center;box-shadow:0 8px 22px rgba(232,64,42,.45)}
+  h1{color:#fff;font-size:24px;letter-spacing:-.4px}
+  .sub{color:#8A93A8;font-size:13px;margin-top:3px}
+  .langbtn{display:flex;background:#171C27;border:1px solid #262D3C;border-radius:11px;padding:3px}
+  .langbtn button{background:none;border:0;color:#8A93A8;font:600 12px var(--font);padding:7px 15px;border-radius:8px;cursor:pointer}
+  .langbtn button.on{background:var(--red);color:#fff}
+
+  /* ---------- design tokens strip ---------- */
+  .tokens{max-width:1500px;margin:0 auto 26px;padding:0 28px;display:flex;gap:10px;flex-wrap:wrap}
+  .sw{width:96px;height:56px;border-radius:12px;display:flex;align-items:flex-end;padding:6px;font:600 9px var(--font);color:#fff;opacity:.95}
+
+  .gallery{max-width:1500px;margin:0 auto;padding:0 28px 70px;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:34px 26px;justify-items:center}
+
+  /* ---------- phone frame ---------- */
+  .phone{width:340px;height:718px;border-radius:44px;background:#1C2230;padding:10px;box-shadow:0 30px 70px rgba(0,0,0,.6),0 0 0 1px #2A3241 inset;position:relative;flex:none}
+  .screen{width:100%;height:100%;border-radius:35px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .notch{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:96px;height:22px;background:#0A0D13;border-radius:12px;z-index:40}
+  .statusbar{height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:600 11px var(--font);color:var(--ink);flex:none;z-index:30}
+  .statusbar .r{display:flex;gap:4px;align-items:center}
+  .caption{color:#C9D0DE;font:600 13px var(--font);margin-top:12px;text-align:center}
+  .caption span{display:block;color:#6E7891;font-weight:400;font-size:11px;margin-top:3px}
+
+  .body{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+  .body::-webkit-scrollbar{display:none}
+
+  /* ---------- shared UI atoms ---------- */
+  .appbar{display:flex;align-items:center;gap:10px;padding:6px 16px 12px}
+  .appbar h2{font-size:17px;letter-spacing:-.2px}
+  .icon{width:34px;height:34px;border-radius:11px;background:#fff;display:grid;place-items:center;box-shadow:0 2px 8px rgba(18,21,28,.07);flex:none}
+  .spacer{flex:1}
+  .pill{font:700 10px var(--font);padding:4px 9px;border-radius:99px;letter-spacing:.2px}
+  .pill.red{background:#FDEAE7;color:var(--red)}
+  .pill.green{background:var(--green-soft);color:var(--green)}
+  .pill.blue{background:var(--blue-soft);color:var(--blue)}
+  .pill.gold{background:#FFF4DC;color:#B47A00}
+  .btn{border:0;border-radius:14px;padding:14px;font:700 14px var(--font);cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn.primary{background:linear-gradient(135deg,var(--red),var(--orange));color:#fff;box-shadow:0 8px 20px rgba(232,64,42,.35)}
+  .btn.ghost{background:#fff;color:var(--ink);box-shadow:0 2px 10px rgba(18,21,28,.08)}
+  .btn.dark{background:var(--ink);color:#fff}
+  .card{background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 10px rgba(18,21,28,.06)}
+  .money{font-variant-numeric:tabular-nums;font-weight:800;letter-spacing:-.3px}
+  .row{display:flex;align-items:center;gap:10px}
+  .muted{color:var(--muted)}
+  .tiny{font-size:11px}
+  .thumb{width:64px;height:64px;border-radius:13px;flex:none;display:grid;place-items:center;font-size:26px;background:linear-gradient(140deg,#EEF1F8,#DDE3F0)}
+
+  /* ---------- cover / hero ---------- */
+  .hero{background:linear-gradient(150deg,var(--red) 0%,#FF6A3D 55%,var(--orange) 100%);padding:0 16px 22px;border-radius:0 0 26px 26px;position:relative;overflow:hidden;color:#fff}
+  .hero:after{content:"";position:absolute;width:190px;height:190px;border-radius:50%;background:rgba(255,255,255,.13);right:-60px;top:-70px}
+  .hero .greet{font-size:12px;opacity:.9;margin-bottom:2px}
+  .hero .name{font-size:19px;font-weight:800;letter-spacing:-.3px}
+  .searchbar{background:rgba(255,255,255,.96);border-radius:13px;padding:11px 13px;display:flex;align-items:center;gap:8px;color:#9AA1B4;font-size:13px;margin-top:14px;position:relative;z-index:2}
+
+  .chips{display:flex;gap:7px;overflow-x:auto;padding:12px 16px 2px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{font:600 11.5px var(--font);padding:7px 13px;border-radius:99px;background:#fff;color:var(--ink-2);white-space:nowrap;box-shadow:0 2px 8px rgba(18,21,28,.06);flex:none}
+  .chip.on{background:var(--ink);color:#fff}
+
+  .sec{display:flex;align-items:baseline;justify-content:space-between;padding:18px 16px 10px}
+  .sec h3{font-size:15.5px;letter-spacing:-.2px}
+  .sec a{font-size:11.5px;color:var(--red);text-decoration:none;font-weight:700}
+
+  .gbcard{background:#fff;border-radius:16px;padding:10px;box-shadow:0 3px 14px rgba(18,21,28,.07)}
+  .gbimg{height:104px;border-radius:12px;background:linear-gradient(140deg,#F0F3FA,#DCE3F2);display:grid;place-items:center;font-size:36px;position:relative}
+  .gbimg .badge{position:absolute;top:6px;left:6px}
+  .gbimg .cnt{position:absolute;bottom:6px;right:6px;background:rgba(18,21,28,.82);color:#fff;font:700 9.5px var(--font);padding:3px 7px;border-radius:8px}
+  .gbtitle{font-size:12.5px;font-weight:600;line-height:1.35;margin:8px 0 6px;height:34px;overflow:hidden}
+  .price{color:var(--red);font-size:16px}
+  .old{color:var(--muted);font-size:10.5px;text-decoration:line-through;margin-left:4px}
+  .progress{height:5px;border-radius:99px;background:#F0F2F7;margin-top:7px;overflow:hidden}
+  .progress i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--red),var(--orange))}
+  .avatars{display:flex;margin-top:7px}
+  .av{width:19px;height:19px;border-radius:50%;border:2px solid #fff;margin-left:-6px;background:#DFE4EF;display:grid;place-items:center;font-size:8px;font-weight:800;color:#5A6478}
+  .av:first-child{margin-left:0}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px}
+
+  /* ---------- tabbar ---------- */
+  .tabbar{flex:none;height:64px;background:#fff;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-around;padding-bottom:8px}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;font:600 9.5px var(--font);color:#A6AEC2}
+  .tab.on{color:var(--red)}
+  .tab .dot{width:3px;height:3px;border-radius:50%;background:transparent}
+  .tab.on .dot{background:var(--red)}
+  .fab{width:46px;height:46px;border-radius:16px;background:linear-gradient(135deg,var(--red),var(--orange));display:grid;place-items:center;box-shadow:0 8px 18px rgba(232,64,42,.4);margin-top:-14px}
+
+  /* ---------- product detail ---------- */
+  .pd-hero{height:236px;background:linear-gradient(150deg,#F3F5FB,#D9E0F0);display:grid;place-items:center;font-size:74px;position:relative}
+  .pd-hero .timer{position:absolute;bottom:12px;left:16px;background:var(--ink);color:#fff;font:700 11px var(--font);padding:7px 11px;border-radius:10px;display:flex;gap:6px;align-items:center}
+  .prices{background:#fff;border-radius:18px 18px 0 0;margin-top:-16px;padding:16px;position:relative}
+  .bigprice{font-size:27px;color:var(--red);font-weight:800;letter-spacing:-1px}
+  .tierrow{display:flex;gap:8px;margin-top:12px}
+  .tier{flex:1;border:1.5px solid var(--line);border-radius:13px;padding:9px 10px;text-align:center}
+  .tier.on{border-color:var(--red);background:#FFF7F5;position:relative}
+  .tier .t1{font:800 14px var(--font);color:var(--ink)}
+  .tier.on .t1{color:var(--red)}
+  .tier .t2{font-size:9.5px;color:var(--muted);margin-top:2px}
+  .seal{background:var(--green-soft);border-radius:12px;padding:10px 12px;display:flex;gap:9px;align-items:center;margin:12px 16px 0}
+  .seal b{font-size:11.5px;color:#0C7A3C;display:block}
+  .seal .d{font-size:10px;color:#3C8F63;line-height:1.35}
+  .cta{flex:none;background:#fff;border-top:1px solid var(--line);padding:12px 16px 20px;display:flex;gap:9px}
+
+  /* ---------- group in progress ---------- */
+  .gb-hero{background:linear-gradient(150deg,#12151C,#2B3446);color:#fff;padding:18px 16px 26px;border-radius:0 0 26px 26px;text-align:center;position:relative;overflow:hidden}
+  .gb-hero:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(255,138,61,.35),transparent 62%)}
+  .ring{width:132px;height:132px;border-radius:50%;margin:8px auto 12px;display:grid;place-items:center;position:relative;
+        background:conic-gradient(var(--orange) 0turn .66turn,#3A4356 .66turn 1turn)}
+  .ring:after{content:"";position:absolute;inset:11px;border-radius:50%;background:#12151C}
+  .ring .in{position:relative;z-index:2;text-align:center}
+  .ring .n{font-size:26px;font-weight:800;letter-spacing:-1px}
+  .ring .l{font-size:10px;color:#98A2B8}
+  .members{display:flex;justify-content:center;gap:14px;margin:14px 0 4px}
+  .mem{text-align:center;width:56px}
+  .mem .pic{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:17px;font-weight:800;margin:0 auto 5px}
+  .mem .nm{font-size:9.5px;color:#C6CEDD;line-height:1.2}
+  .mem.empty .pic{border:1.5px dashed #4A5468;color:#5D6880;background:transparent}
+  .share{display:flex;gap:8px;padding:0 16px;margin-top:14px}
+  .share .s{flex:1;background:#fff;border-radius:13px;padding:11px 6px;text-align:center;font:600 9.5px var(--font);color:var(--ink-2);box-shadow:0 2px 10px rgba(18,21,28,.06)}
+
+  /* ---------- checkout ---------- */
+  .stepper{display:flex;align-items:center;gap:6px;padding:0 16px 14px}
+  .stepper .st{flex:1;height:4px;border-radius:99px;background:#E3E7F0}
+  .stepper .st.on{background:var(--red)}
+  .stepper .st.done{background:var(--green)}
+  .kv{display:flex;justify-content:space-between;font-size:12.5px;padding:7px 0}
+  .kv.total{border-top:1px dashed var(--line);margin-top:6px;padding-top:11px;font-size:14px}
+  .payopt{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1.5px solid var(--line);border-radius:13px;margin-bottom:8px;font-size:12.5px;font-weight:600}
+  .payopt.on{border-color:var(--red);background:#FFF7F5}
+  .radio{width:17px;height:17px;border-radius:50%;border:2px solid #CBD2E0;flex:none;display:grid;place-items:center}
+  .payopt.on .radio{border-color:var(--red)}
+  .payopt.on .radio:after{content:"";width:8px;height:8px;border-radius:50%;background:var(--red)}
+  .escrowbox{background:linear-gradient(135deg,#0E1B14,#14301F);border-radius:16px;padding:14px;color:#fff;display:flex;gap:11px;align-items:flex-start}
+  .escrowbox .t{font-size:12px;font-weight:700;color:#7CE3A8}
+  .escrowbox .d{font-size:10.5px;color:#9FB8AA;line-height:1.45;margin-top:3px}
+
+  /* ---------- wallet ---------- */
+  .walletcard{background:linear-gradient(135deg,#12151C,#333D52);border-radius:20px;padding:18px;color:#fff;position:relative;overflow:hidden;margin:0 16px}
+  .walletcard:after{content:"";position:absolute;width:150px;height:150px;border-radius:50%;background:rgba(255,176,32,.18);right:-50px;top:-60px}
+  .wbal{font-size:30px;font-weight:800;letter-spacing:-1.2px;margin-top:2px}
+  .wrow{display:flex;gap:22px;margin-top:16px;position:relative;z-index:2}
+  .wrow .lb{font-size:9.5px;color:#9DA6BA}
+  .wrow .vl{font-size:14px;font-weight:800;margin-top:2px}
+  .txn{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #F1F3F8}
+  .txn .ic{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:14px;flex:none}
+
+  /* ---------- order tracking ---------- */
+  .tl{position:relative;padding-left:26px}
+  .tl:before{content:"";position:absolute;left:7px;top:8px;bottom:8px;width:2px;background:#E7E9F0}
+  .tli{position:relative;padding-bottom:18px}
+  .tli:before{content:"";position:absolute;left:-24px;top:3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2.5px solid #D5DBE7}
+  .tli.done:before{background:var(--green);border-color:var(--green)}
+  .tli.now:before{background:var(--red);border-color:var(--red);box-shadow:0 0 0 4px rgba(232,64,42,.15)}
+  .tli .tt{font-size:12.5px;font-weight:700}
+  .tli .td{font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+
+  /* ---------- admin dashboard (wide) ---------- */
+  .phone.wide{width:100%;max-width:720px;height:auto;border-radius:26px;padding:12px}
+  .phone.wide .screen{border-radius:18px;height:auto}
+  .admin{padding:18px;background:#0F1420;color:#DDE3EE;min-height:520px}
+  .admin .h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .admin h2{font-size:17px;color:#fff;font-weight:700}
+  .admin .sub2{font-size:11px;color:#7E89A1}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .kpi{background:#161D2C;border:1px solid #232C3E;border-radius:14px;padding:12px}
+  .kpi .lb{font-size:9.5px;color:#7E89A1;text-transform:uppercase;letter-spacing:.5px}
+  .kpi .v{font-size:19px;font-weight:800;color:#fff;margin-top:5px;letter-spacing:-.5px}
+  .kpi .d{font-size:9.5px;margin-top:4px}
+  .admin table{width:100%;border-collapse:collapse;margin-top:6px;font-size:11.5px}
+  .admin th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:#6E7891;padding:8px 8px;border-bottom:1px solid #232C3E}
+  .admin td{padding:10px 8px;border-bottom:1px solid #1C2434;color:#C2CADB}
+  .admin .tag{font:700 9.5px var(--font);padding:3px 8px;border-radius:6px}
+  .t-held{background:#3A2E12;color:#FFC24A}
+  .t-rel{background:#12301F;color:#5FD394}
+  .t-disp{background:#3A1518;color:#FF8C82}
+  .t-wait{background:#1B2A46;color:#84AEFF}
+  .panel{background:#161D2C;border:1px solid #232C3E;border-radius:14px;padding:14px;margin-top:12px}
+  .panel .pt{font-size:12px;font-weight:700;color:#fff;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+  .bar{height:7px;border-radius:99px;background:#232C3E;overflow:hidden;margin-top:5px}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,#E8402A,#FFB020)}
+  .flowbox{background:#121A28;border:1px dashed #2C3648;border-radius:12px;padding:12px;font:600 11px var(--font);color:#94A0B8;line-height:2}
+  .flowbox b{color:#FFC24A}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:640px){.kpis{grid-template-columns:repeat(2,1fr)}.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <div class="logo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M4 7h16l-1.6 11.2a2 2 0 0 1-2 1.8H7.6a2 2 0 0 1-2-1.8L4 7Z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M8.5 7V5.5a3.5 3.5 0 1 1 7 0V7" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="9.5" cy="12" r="1.2" fill="#fff"/><circle cx="14.5" cy="12" r="1.2" fill="#fff"/>
+      </svg>
+    </div>
+    <div>
+      <h1>DuoBozor — Mockup</h1>
+      <div class="sub">Маркетплейси гурӯҳхаридӣ · дизайн-система ва 7 экрани асосӣ</div>
+    </div>
+  </div>
+  <div class="langbtn">
+    <button class="on" onclick="setLang('tj',this)">Тоҷикӣ</button>
+    <button onclick="setLang('ru',this)">Русский</button>
+  </div>
+</header>
+
+<div class="tokens">
+  <div class="sw" style="background:#E8402A">Primary<br>#E8402A</div>
+  <div class="sw" style="background:#FF8A3D">Accent<br>#FF8A3D</div>
+  <div class="sw" style="background:#FFB020">Gold<br>#FFB020</div>
+  <div class="sw" style="background:#12A150">Escrow<br>#12A150</div>
+  <div class="sw" style="background:#2F6FED">Info<br>#2F6FED</div>
+  <div class="sw" style="background:#12151C">Ink<br>#12151C</div>
+  <div class="sw" style="background:#F5F6FA;color:#12151C">Surface<br>#F5F6FA</div>
+</div>
+
+<div class="gallery">
+
+<!-- ═══════════════ 1. HOME FEED ═══════════════ -->
+<div>
+<div class="phone"><div class="notch"></div><div class="screen">
+  <div class="statusbar"><span>9:41</span><span class="r">
+    <svg width="15" height="11" viewBox="0 0 15 11"><rect x="0" y="7" width="2.5" height="4" rx=".6" fill="#12151C"/><rect x="3.6" y="5" width="2.5" height="6" rx=".6" fill="#12151C"/><rect x="7.2" y="2.8" width="2.5" height="8.2" rx=".6" fill="#12151C"/><rect x="10.8" y="0" width="2.5" height="11" rx=".6" fill="#12151C"/></svg>
+    <svg width="16" height="11" viewBox="0 0 16 11"><rect x="0" y="0" width="13" height="11" rx="3" stroke="#12151C" stroke-width="1.2" fill="none"/><rect x="2" y="2" width="8" height="7" rx="1.6" fill="#12151C"/><rect x="14" y="3.5" width="1.8" height="4" rx=".9" fill="#12151C"/></svg>
+  </span></div>
+
+  <div class="body">
+    <div class="hero">
+      <div class="row" style="justify-content:space-between;padding-top:6px">
+        <div>
+          <div class="greet" data-tj="Салом, Фарзона 👋" data-ru="Привет, Фарзона 👋">Салом, Фарзона 👋</div>
+          <div class="name" data-tj="Хуҷанд · шаҳри ту" data-ru="Худжанд · твой город">Хуҷанд · шаҳри ту</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="width:36px;height:36px;border-radius:12px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:15px">🔔</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:#fff;color:var(--red);display:grid;place-items:center;font-weight:800;font-size:13px">Ф</div>
+        </div>
+      </div>
+      <div class="searchbar">
+        <svg width="15" height="15" viewBox="0 0 16 16"><circle cx="7" cy="7" r="5" stroke="#9AA1B4" stroke-width="1.7" fill="none"/><path d="M11 11l4 4" stroke="#9AA1B4" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <span data-tj="Ҷустуҷӯи мол ё дӯкон…" data-ru="Поиск товара или магазина…">Ҷустуҷӯи мол ё дӯкон…</span>
+      </div>
+    </div>
+
+    <div class="chips">
+      <div class="chip on" data-tj="Ҳама" data-ru="Всё">Ҳама</div>
+      <div class="chip" data-tj="🔥 Гурӯҳӣ" data-ru="🔥 Группой">🔥 Гурӯҳӣ</div>
+      <div class="chip" data-tj="Либос" data-ru="Одежда">Либос</div>
+      <div class="chip" data-tj="Электроника" data-ru="Электроника">Электроника</div>
+      <div class="chip" data-tj="Кӯдакон" data-ru="Детям">Кӯдакон</div>
+    </div>
+
+    <div class="sec" style="padding-bottom:8px">
+      <h3 data-tj="Оҳанрабоҳои рӯз" data-ru="Хиты дня">Оҳанрабоҳои рӯз</h3>
+      <a data-tj="Ҳама ›" data-ru="Все ›">Ҳама ›</a>
+    </div>
+    <div class="grid2">
+      <div class="gbcard">
+        <div class="gbimg">👟<span class="pill red badge" data-tj="−38%" data-ru="−38%">−38%</span><span class="cnt">🔥 128</span></div>
+        <div class="gbtitle" data-tj="Пойафзоли варзишӣ, сабук" data-ru="Кроссовки спортивные, лёгкие">Пойафзоли варзишӣ, сабук</div>
+        <div class="row" style="align-items:baseline"><span class="money price">149</span><span class="old">240</span></div>
+        <div class="progress"><i style="width:78%"></i></div>
+        <div class="row" style="justify-content:space-between;margin-top:6px">
+          <div class="avatars"><div class="av">А</div><div class="av">М</div><div class="av">+3</div></div>
+          <span class="tiny" style="color:var(--red);font-weight:700" data-tj="2 нафар монд" data-ru="Нужно ещё 2">2 нафар монд</span>
+        </div>
+      </div>
+      <div class="gbcard">
+        <div class="gbimg">🎧<span class="pill green badge" data-tj="Гурӯҳӣ" data-ru="Группой">Гурӯҳӣ</span><span class="cnt">🔥 91</span></div>
+        <div class="gbtitle" data-tj="Гӯшмонаки бесим, 40 соат" data-ru="Наушники беспроводные, 40ч">Гӯшмонаки бесим, 40 соат</div>
+        <div class="row" style="align-items:baseline"><span class="money price">89</span><span class="old">135</span></div>
+        <div class="progress"><i style="width:52%"></i></div>
+        <div class="row" style="justify-content:space-between;margin-top:6px">
+          <div class="avatars"><div class="av">Н</div><div class="av">+1</div></div>
+          <span class="tiny" style="color:var(--red);font-weight:700" data-tj="3 нафар монд" data-ru="Нужно ещё 3">3 нафар монд</span>
+        </div>
+      </div>
+      <div class="gbcard">
+        <div class="gbimg" style="height:96px">🫖</div>
+        <div class="gbtitle" data-tj="Чойники шишагӣ 1.5л" data-ru="Чайник стеклянный 1.5л">Чойники шишагӣ 1.5л</div>
+        <div class="row" style="align-items:baseline"><span class="money price">62</span><span class="old">95</span></div>
+        <div class="progress"><i style="width:34%"></i></div>
+      </div>
+      <div class="gbcard">
+        <div class="gbimg" style="height:96px">🧥</div>
+        <div class="gbtitle" data-tj="Куртаи тирамоҳӣ, гарм" data-ru="Куртка осенняя, тёплая">Куртаи тирамоҳӣ, гарм</div>
+        <div class="row" style="align-items:baseline"><span class="money price">210</span><span class="old">390</span></div>
+        <div class="progress"><i style="width:61%"></i></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3 data-tj="Барои ту" data-ru="Для тебя">Барои ту</h3>
+      <a data-tj="Филтр" data-ru="Фильтр">Филтр</a>
+    </div>
+    <div style="padding:0 16px 20px">
+      <div class="card row" style="gap:12px">
+        <div class="thumb">🧴</div>
+        <div style="flex:1">
+          <div style="font-size:12.5px;font-weight:600" data-tj="Маҷмӯаи нигоҳубини рӯй, 4 адад" data-ru="Набор для ухода за лицом, 4 шт">Маҷмӯаи нигоҳубини рӯй, 4 адад</div>
+          <div class="row" style="margin-top:6px;justify-content:space-between">
+            <span class="money price" style="font-size:14px">78 c.</span>
+            <span class="pill gold" data-tj="★ 4.8 · 312" data-ru="★ 4.8 · 312">★ 4.8 · 312</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <div class="tab on">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 8.5 10 3l7 5.5V16a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 16V8.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      <span data-tj="Асосӣ" data-ru="Главная">Асосӣ</span><span class="dot"></span>
+    </div>
+    <div class="tab">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.7"/><path d="M12 12l5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      <span data-tj="Ҷустуҷӯ" data-ru="Поиск">Ҷустуҷӯ</span><span class="dot"></span>
+    </div>
+    <div class="fab">
+      <svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 4v12M4 10h12" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/></svg>
+    </div>
+    <div class="tab">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M6 7V6a4 4 0 0 1 8 0v1" stroke="currentColor" stroke-width="1.7"/><rect x="3.5" y="7" width="13" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/></svg>
+      <span data-tj="Сабад" data-ru="Корзина">Сабад</span><span class="dot"></span>
+    </div>
+    <div class="tab">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M4 17c0-3.3 2.7-5.2 6-5.2s6 1.9 6 5.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      <span data-tj="Ман" data-ru="Профиль">Ман</span><span class="dot"></span>
+    </div>
+  </div>
+</div></div>
+<div class="caption">1 · Home feed <span data-tj="Feed-и тавсиядиҳӣ + оҳанрабоҳои рӯз + таймери гурӯҳ" data-ru="Рекомендательная лента + хиты дня + таймер группы">Feed-и тавсиядиҳӣ + оҳанрабоҳои рӯз + таймери гурӯҳ</span></div>
+</div>
+
+<!-- ═══════════════ 2. PRODUCT + GROUP BUY ═══════════════ -->
+<div>
+<div class="phone"><div class="notch"></div><div class="screen">
+  <div class="statusbar"><span>9:41</span><span class="r" style="font-size:10px">●●●</span></div>
+  <div class="body">
+    <div class="pd-hero">👟
+      <div class="timer">⏱ <span data-tj="Гурӯҳ 5:42:10 боқӣ" data-ru="Группа 5:42:10 осталось">Гурӯҳ 5:42:10 боқӣ</span></div>
+      <div style="position:absolute;top:12px;left:16px" class="icon">‹</div>
+      <div class="pill red" style="position:absolute;top:12px;right:16px">−38%</div>
+    </div>
+
+    <div class="prices">
+      <div class="row" style="align-items:baseline;gap:8px">
+        <span class="bigprice">149 c.</span>
+        <span class="old" style="font-size:13px">240 c.</span>
+        <span class="pill green" data-tj="Гурӯҳӣ" data-ru="Группой" style="margin-left:auto">Гурӯҳӣ</span>
+      </div>
+      <div style="font-size:13.5px;font-weight:600;line-height:1.45;margin-top:8px" data-tj="Пойафзоли варзишӣ, сабук, барои ҳар рӯз — андозаҳои 36–45" data-ru="Кроссовки спортивные, лёгкие, на каждый день — размеры 36–45">Пойафзоли варзишӣ, сабук, барои ҳар рӯз — андозаҳои 36–45</div>
+
+      <div class="row" style="margin-top:10px;gap:8px">
+        <span class="pill gold">★ 4.8</span>
+        <span class="tiny muted" data-tj="312 баҳо · 1 240 фурӯхташуда" data-ru="312 отзыва · 1 240 продано">312 баҳо · 1 240 фурӯхташуда</span>
+      </div>
+
+      <div style="font-size:11.5px;font-weight:700;margin:16px 0 8px" data-tj="Нарх вобаста ба андозаи гурӯҳ" data-ru="Цена зависит от размера группы">Нарх вобаста ба андозаи гурӯҳ</div>
+      <div class="tierrow">
+        <div class="tier"><div class="t1">1</div><div class="t2" data-tj="танҳо" data-ru="один">танҳо</div><div style="font-size:11px;font-weight:800;margin-top:4px">240</div></div>
+        <div class="tier on"><div class="t1">2</div><div class="t2" data-tj="ҷуфт" data-ru="пара">ҷуфт</div><div style="font-size:11px;font-weight:800;margin-top:4px;color:var(--red)">149</div></div>
+        <div class="tier"><div class="t1">5</div><div class="t2" data-tj="гурӯҳ" data-ru="группа">гурӯҳ</div><div style="font-size:11px;font-weight:800;margin-top:4px">132</div></div>
+      </div>
+    </div>
+
+    <div class="seal">
+      <div style="font-size:19px">🛡️</div>
+      <div>
+        <b data-tj="Пул дар escrow ҳифз мешавад" data-ru="Деньги хранятся в escrow">Пул дар escrow ҳифз мешавад</b>
+        <div class="d" data-tj="Маблағ танҳо пас аз тасдиқи гирифтани мол ба фурӯшанда меравад" data-ru="Средства уходят продавцу только после подтверждения получения">Маблағ танҳо пас аз тасдиқи гирифтани мол ба фурӯшанда меравад</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin:12px 16px">
+      <div class="row" style="justify-content:space-between">
+        <div class="row" style="gap:9px">
+          <div class="thumb" style="width:38px;height:38px;font-size:16px">🏪</div>
+          <div>
+            <div style="font-size:12px;font-weight:700">Bozori Nav</div>
+            <div class="tiny muted" data-tj="Хуҷанд · ✓ KYC тасдиқшуда" data-ru="Худжанд · ✓ KYC подтверждён">Хуҷанд · ✓ KYC тасдиқшуда</div>
+          </div>
+        </div>
+        <span class="pill blue" data-tj="Дӯкон ›" data-ru="Магазин ›">Дӯкон ›</span>
+      </div>
+    </div>
+
+    <div style="padding:0 16px 20px">
+      <div class="card" style="background:#FFF9EF;box-shadow:none;border:1px dashed #F0DDB8">
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <div style="font-size:12px;font-weight:800;color:#8A5B00" data-tj="🎁 Гурӯҳ соз — 2 нафар кофӣ" data-ru="🎁 Создай группу — достаточно 2 человек">🎁 Гурӯҳ соз — 2 нафар кофӣ</div>
+            <div class="tiny" style="color:#A98C4D;margin-top:3px" data-tj="Дӯстро даъват кун, ҳарду 91 c. сарфа мекунед" data-ru="Пригласи друга, оба сэкономите 91 c.">Дӯстро даъват кун, ҳарду 91 c. сарфа мекунед</div>
+          </div>
+          <div style="font-size:22px">👥</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta">
+    <button class="btn ghost" style="flex:0 0 46%">
+      <span data-tj="Ҳамроҳ шав" data-ru="Присоединиться">Ҳамроҳ шав</span>
+    </button>
+    <button class="btn primary">
+      <span data-tj="Гурӯҳ соз" data-ru="Создать группу">Гурӯҳ соз</span>
+    </button>
+  </div>
+</div></div>
+<div class="caption">2 · Маҳсулот <span data-tj="Нархи зинавӣ (1 / 2 / 5 нафар) + escrow-кафолат" data-ru="Ступенчатая цена (1 / 2 / 5) + гарантия escrow">Нархи зинавӣ (1 / 2 / 5 нафар) + escrow-кафолат</span></div>
+</div>
+
+<!-- ═══════════════ 3. GROUP IN PROGRESS ═══════════════ -->
+<div>
+<div class="phone"><div class="notch"></div><div class="screen">
+  <div class="statusbar"><span>9:41</span><span class="r" style="font-size:10px">●●●</span></div>
+  <div class="body">
+    <div class="gb-hero">
+      <div class="row" style="justify-content:space-between;padding-top:4px;position:relative;z-index:2">
+        <div class="icon" style="background:rgba(255,255,255,.14);color:#fff;font-size:18px">‹</div>
+        <div style="font-size:13px;font-weight:700" data-tj="Гурӯҳи ман" data-ru="Моя группа">Гурӯҳи ман</div>
+        <div class="icon" style="background:rgba(255,255,255,.14);color:#fff;font-size:13px">⋯</div>
+      </div>
+      <div class="ring"><div class="in">
+        <div class="n">2/3</div>
+        <div class="l" data-tj="нафар" data-ru="человек">нафар</div>
+      </div></div>
+      <div style="font-size:15px;font-weight:800" data-tj="1 нафар монд — гурӯҳ пурра мешавад!" data-ru="Остался 1 — группа почти собрана!">1 нафар монд — гурӯҳ пурра мешавад!</div>
+      <div class="tiny" style="color:#98A2B8;margin-top:5px" data-tj="Вақти боқимонда: 05:42:10" data-ru="Осталось: 05:42:10">Вақти боқимонда: 05:42:10</div>
+
+      <div class="members">
+        <div class="mem"><div class="pic" style="background:#FF8A3D;color:#fff">Ф</div><div class="nm" data-tj="Ту" data-ru="Ты">Ту</div></div>
+        <div class="mem"><div class="pic" style="background:#5FD394;color:#0D2A1B">М</div><div class="nm">Мадина</div></div>
+        <div class="mem empty"><div class="pic">+</div><div class="nm" data-tj="Ҷои ту?" data-ru="Твоё место?">Ҷои ту?</div></div>
+      </div>
+
+      <div style="margin-top:16px;background:rgba(255,255,255,.08);border-radius:14px;padding:12px;display:inline-flex;gap:8px;align-items:center">
+        <span class="tiny" style="color:#C6CEDD" data-tj="Нархи гурӯҳӣ:" data-ru="Цена группы:">Нархи гурӯҳӣ:</span>
+        <span class="money" style="color:#FFC24A;font-size:15px">149 c.</span>
+        <span class="tiny" style="color:#8B93A6;text-decoration:line-through">240 c.</span>
+      </div>
+    </div>
+
+    <div class="sec"><h3 data-tj="Дӯстро даъват кун" data-ru="Пригласи друга">Дӯстро даъват кун</h3></div>
+    <div class="share">
+      <div class="s"><div style="font-size:19px;margin-bottom:4px">💬</div>WhatsApp</div>
+      <div class="s"><div style="font-size:19px;margin-bottom:4px">✈️</div>Telegram</div>
+      <div class="s"><div style="font-size:19px;margin-bottom:4px">🔗</div><span data-tj="Линк" data-ru="Ссылка">Линк</span></div>
+      <div class="s"><div style="font-size:19px;margin-bottom:4px">📱</div>QR</div>
+    </div>
+
+    <div class="sec"><h3 data-tj="Ҳолат" data-ru="Статус">Ҳолат</h3></div>
+    <div style="padding:0 16px 20px">
+      <div class="card">
+        <div class="tl">
+          <div class="tli done"><div class="tt" data-tj="Гурӯҳ соз шуд" data-ru="Группа создана">Гурӯҳ соз шуд</div><div class="td">09:12 · <span data-tj="Ту" data-ru="Ты">Ту</span></div></div>
+          <div class="tli done"><div class="tt" data-tj="Мадина ҳамроҳ шуд" data-ru="Мадина присоединилась">Мадина ҳамроҳ шуд</div><div class="td">09:24</div></div>
+          <div class="tli now"><div class="tt" data-tj="Интизори иштирокчии 3-юм" data-ru="Ждём третьего участника">Интизори иштирокчии 3-юм</div><div class="td" data-tj="То 14:54 — баъд пул автоматикан баргардонида мешавад" data-ru="До 14:54 — затем автоматический возврат">То 14:54 — баъд пул автоматикан баргардонида мешавад</div></div>
+          <div class="tli"><div class="tt" data-tj="Пардохт → escrow" data-ru="Оплата → escrow">Пардохт → escrow</div><div class="td" data-tj="Ҳама ҳамроҳ шаванд, пардохт якҷоя" data-ru="Когда все собрались — оплата">Ҳама ҳамроҳ шаванд, пардохт якҷоя</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cta">
+    <button class="btn ghost" style="flex:0 0 40%"><span data-tj="Бекор" data-ru="Отмена">Бекор</span></button>
+    <button class="btn primary"><span data-tj="Боз 1 нафар даъват кун" data-ru="Пригласить ещё 1">Боз 1 нафар даъват кун</span></button>
+  </div>
+</div></div>
+<div class="caption">3 · Гурӯҳ дар ҷараён <span data-tj="Ҳастаи Pinduoduo: таймер, иштирокчиён, даъватнома" data-ru="Ядро Pinduoduo: таймер, участники, приглашение">Ҳастаи Pinduoduo: таймер, иштирокчиён, даъватнома</span></div>
+</div>
+
+<!-- ═══════════════ 4. CHECKOUT + ESCROW ═══════════════ -->
+<div>
+<div class="phone"><div class="notch"></div><div class="screen">
+  <div class="statusbar"><span>9:41</span><span class="r" style="font-size:10px">●●●</span></div>
+  <div class="body">
+    <div class="appbar">
+      <div class="icon">‹</div>
+      <h2 data-tj="Пардохт" data-ru="Оплата">Пардохт</h2>
+    </div>
+    <div class="stepper"><i class="st done"></i><i class="st done"></i><i class="st on"></i><i class="st"></i></div>
+
+    <div style="padding:0 16px">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;margin-bottom:10px">
+          <div class="tiny muted" data-tj="Расонидан ба" data-ru="Доставка">Расонидан ба</div>
+          <div class="tiny" style="color:var(--red);font-weight:700" data-tj="Иваз" data-ru="Изменить">Иваз</div>
+        </div>
+        <div class="row" style="gap:10px">
+          <div style="width:34px;height:34px;border-radius:11px;background:#FDEAE7;display:grid;place-items:center;font-size:15px">📍</div>
+          <div>
+            <div style="font-size:12.5px;font-weight:700" data-tj="Хуҷанд, кӯчаи Ленин 42, хон. 15" data-ru="Худжанд, ул. Ленина 42, кв. 15">Хуҷанд, кӯчаи Ленин 42, хон. 15</div>
+            <div class="tiny muted" data-tj="Фарзона · +992 92 123 45 67" data-ru="Фарзона · +992 92 123 45 67">Фарзона · +992 92 123 45 67</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:10px">
+        <div class="tiny muted" style="margin-bottom:10px" data-tj="Усули пардохт" data-ru="Способ оплаты">Усули пардохт</div>
+        <div class="payopt on"><div class="radio"></div><div style="flex:1"><div data-tj="Алипэй / корти бонкӣ" data-ru="Alipay / банковская карта">Алипэй / корти бонкӣ</div><div class="tiny muted" style="font-weight:400" data-tj="Пардохти фаврӣ, ҳифз дар escrow" data-ru="Мгновенно, хранение в escrow">Пардохти фаврӣ, ҳифз дар escrow</div></div>💳</div>
+        <div class="payopt"><div class="radio"></div><div style="flex:1"><div data-tj="Ҳамёни дохилӣ" data-ru="Внутренний кошелёк">Ҳамёни дохилӣ</div><div class="tiny muted" style="font-weight:400">342.50 c. <span data-tj="дастрас" data-ru="доступно">дастрас</span></div></div>👛</div>
+        <div class="payopt"><div class="radio"></div><div style="flex:1"><div data-tj="Нақдӣ ҳангоми гирифтан" data-ru="Наличными при получении">Нақдӣ ҳангоми гирифтан</div><div class="tiny muted" style="font-weight:400" data-tj="Маблағ аз курер гирифта мешавад" data-ru="Курьер забирает при вручении">Маблағ аз курер гирифта мешавад</div></div>💵</div>
+      </div>
+
+      <div class="card" style="margin-top:10px">
+        <div class="kv"><span class="muted" data-tj="Мол (2 адад)" data-ru="Товар (2 шт)">Мол (2 адад)</span><span>298.00 c.</span></div>
+        <div class="kv"><span class="muted" data-tj="Расонидан" data-ru="Доставка">Расонидан</span><span style="color:var(--green);font-weight:700" data-tj="Ройгон" data-ru="Бесплатно">Ройгон</span></div>
+        <div class="kv"><span class="muted" data-tj="Купони WELCOME10" data-ru="Купон WELCOME10">Купони WELCOME10</span><span style="color:var(--red)">−20.00 c.</span></div>
+        <div class="kv total"><b data-tj="Ҳамагӣ" data-ru="Итого">Ҳамагӣ</b><b class="money" style="color:var(--red)">278.00 c.</b></div>
+      </div>
+
+      <div class="escrowbox" style="margin-top:12px">
+        <div style="font-size:20px">🔒</div>
+        <div>
+          <div class="t" data-tj="Пул ба escrow меравад, на ба фурӯшанда" data-ru="Деньги идут в escrow, а не продавцу">Пул ба escrow меравад, на ба фурӯшанда</div>
+          <div class="d" data-tj="Танҳо вақте ки ту молро гирифта «Гирифтам»-ро пахш мекунӣ, фурӯшанда пулашро мегирад. Агар мол наояд ё вайрон бошад — 100% баргардонида мешавад." data-ru="Продавец получит деньги только после того, как ты нажмёшь «Получил». Если товар не пришёл или повреждён — возврат 100%.">Танҳо вақте ки ту молро гирифта «Гирифтам»-ро пахш мекунӣ, фурӯшанда пулашро мегирад. Агар мол наояд ё вайрон бошад — 100% баргардонида мешавад.</div>
+        </div>
+      </div>
+    </div>
+    <div style="height:16px"></div>
+  </div>
+  <div class="cta">
+    <div style="flex:1">
+      <div class="tiny muted" data-tj="Ба пардохт" data-ru="К оплате">Ба пардохт</div>
+      <div class="money" style="color:var(--red);font-size:18px">278.00 c.</div>
+    </div>
+    <button class="btn primary" style="flex:0 0 55%"><span data-tj="🔒 Бехатар пардохт" data-ru="🔒 Безопасно оплатить">🔒 Бехатар пардохт</span></button>
+  </div>
+</div></div>
+<div class="caption">4 · Checkout + Escrow <span data-tj="Харидор пулро ба платформа медиҳад, на ба фурӯшанда" data-ru="Покупатель платит платформе, а не продавцу">Харидор пулро ба платформа медиҳад, на ба фурӯшанда</span></div>
+</div>
+
+<!-- ═══════════════ 5. ORDER TRACKING ═══════════════ -->
+<div>
+<div class="phone"><div class="notch"></div><div class="screen">
+  <div class="statusbar"><span>9:41</span><span class="r" style="font-size:10px">●●●</span></div>
+  <div class="body">
+    <div class="appbar"><div class="icon">‹</div><h2 data-tj="Фармоиш #DB-000417" data-ru="Заказ #DB-000417">Фармоиш #DB-000417</h2></div>
+
+    <div style="padding:0 16px">
+      <div class="card" style="background:linear-gradient(135deg,#0E1B14,#173825);color:#fff">
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <div class="tiny" style="color:#7CE3A8;font-weight:700" data-tj="ESCROW · МАБЛАҒ ҲИФЗ ШУДААСТ" data-ru="ESCROW · СРЕДСТВА ЗАЩИЩЕНЫ">ESCROW · МАБЛАҒ ҲИФЗ ШУДААСТ</div>
+            <div class="money" style="font-size:24px;margin-top:4px">278.00 c.</div>
+          </div>
+          <div style="font-size:26px">🛡️</div>
+        </div>
+        <div class="tiny" style="color:#9FB8AA;margin-top:8px" data-tj="Ин маблағ на ба фурӯшанда, на ба платформа — дар ҳисоби мунҷамид аст." data-ru="Эти средства не у продавца и не у платформы — они заморожены.">Ин маблағ на ба фурӯшанда, на ба платформа — дар ҳисоби мунҷамид аст.</div>
+      </div>
+
+      <div class="card" style="margin-top:10px">
+        <div class="row" style="justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:12.5px;font-weight:700" data-tj="Пайгирӣ" data-ru="Отслеживание">Пайгирӣ</div>
+          <span class="pill blue" data-tj="Дар роҳ" data-ru="В пути">Дар роҳ</span>
+        </div>
+        <div class="tl">
+          <div class="tli done"><div class="tt" data-tj="Пардохт қабул шуд" data-ru="Оплата получена">Пардохт қабул шуд</div><div class="td">10:02 · <span data-tj="escrow" data-ru="escrow">escrow</span></div></div>
+          <div class="tli done"><div class="tt" data-tj="Фурӯшанда бастабандӣ кард" data-ru="Продавец упаковал">Фурӯшанда бастабандӣ кард</div><div class="td">10:48 · Bozori Nav</div></div>
+          <div class="tli done"><div class="tt" data-tj="Ба курер супорида шуд" data-ru="Передан курьеру">Ба курер супорида шуд</div><div class="td">12:10 · <span data-tj="Курер: Рустам" data-ru="Курьер: Рустам">Курер: Рустам</span></div></div>
+          <div class="tli now"><div class="tt" data-tj="Дар роҳ — имрӯз то 18:00" data-ru="В пути — сегодня до 18:00">Дар роҳ — имрӯз то 18:00</div><div class="td" data-tj="Курер занг мезанад. Барои гирифтан OTP лозим." data-ru="Курьер позвонит. Для получения нужен OTP.">Курер занг мезанад. Барои гирифтан OTP лозим.</div></div>
+          <div class="tli"><div class="tt" data-tj="Тасдиқи гирифтан → релизи пул" data-ru="Подтверждение → выплата продавцу">Тасдиқи гирифтан → релизи пул</div><div class="td" data-tj="7 рӯз вақт барои баҳс" data-ru="7 дней на спор">7 рӯз вақт барои баҳс</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:10px;background:#FFF9EF;box-shadow:none;border:1px dashed #F0DDB8">
+        <div class="tiny" style="color:#8A5B00;font-weight:700" data-tj="⏳ Пас аз 7 рӯз" data-ru="⏳ Через 7 дней">⏳ Пас аз 7 рӯз</div>
+        <div class="tiny" style="color:#A98C4D;margin-top:3px" data-tj="Агар ту чизе нагӯӣ, маблағ автоматикан ба фурӯшанда меравад." data-ru="Если ты ничего не скажешь, деньги автоматически уйдут продавцу.">Агар ту чизе нагӯӣ, маблағ автоматикан ба фурӯшанда меравад.</div>
+      </div>
+    </div>
+    <div style="height:16px"></div>
+  </div>
+  <div class="cta">
+    <button class="btn ghost" style="flex:0 0 34%"><span data-tj="Баҳс" data-ru="Спор">Баҳс</span></button>
+    <button class="btn primary"><span data-tj="✓ Гирифтам" data-ru="✓ Получил">✓ Гирифтам</span></button>
+  </div>
+</div></div>
+<div class="caption">5 · Пайгирии фармоиш <span data-tj="Timeline + тугмаи «Гирифтам» (SMS/OTP) — триггери релиз" data-ru="Таймлайн + кнопка «Получил» (OTP) — триггер выплаты">Timeline + тугмаи «Гирифтам» (SMS/OTP) — триггери релиз</span></div>
+</div>
+
+<!-- ═══════════════ 6. WALLET ═══════════════ -->
+<div>
+<div class="phone"><div class="notch"></div><div class="screen">
+  <div class="statusbar"><span>9:41</span><span class="r" style="font-size:10px">●●●</span></div>
+  <div class="body">
+    <div class="appbar"><div class="icon">‹</div><h2 data-tj="Ҳамёни ман" data-ru="Мой кошелёк">Ҳамёни ман</h2></div>
+
+    <div class="walletcard">
+      <div class="tiny" style="color:#9DA6BA" data-tj="Бақияи дастрас" data-ru="Доступный баланс">Бақияи дастрас</div>
+      <div class="wbal">342.50 c.</div>
+      <div class="wrow">
+        <div><div class="lb" data-tj="Дар escrow" data-ru="В escrow">Дар escrow</div><div class="vl" style="color:#FFC24A">278.00</div></div>
+        <div><div class="lb" data-tj="Кэшбэк" data-ru="Кэшбэк">Кэшбэк</div><div class="vl" style="color:#7CE3A8">12.40</div></div>
+        <div><div class="lb" data-tj="Купонҳо" data-ru="Купоны">Купонҳо</div><div class="vl">3</div></div>
+      </div>
+    </div>
+
+    <div class="row" style="padding:14px 16px;gap:9px">
+      <button class="btn ghost" style="padding:11px;font-size:11.5px"><span data-tj="Пур кардан" data-ru="Пополнить">Пур кардан</span></button>
+      <button class="btn ghost" style="padding:11px;font-size:11.5px"><span data-tj="Баровардан" data-ru="Вывести">Баровардан</span></button>
+      <button class="btn dark" style="padding:11px;font-size:11.5px"><span data-tj="Купонҳо" data-ru="Купоны">Купонҳо</span></button>
+    </div>
+
+    <div class="sec" style="padding-top:6px"><h3 data-tj="Ҳаракатҳо" data-ru="Операции">Ҳаракатҳо</h3><a data-tj="Ҳама" data-ru="Все">Ҳама</a></div>
+    <div style="padding:0 16px 20px">
+      <div class="card">
+        <div class="txn">
+          <div class="ic" style="background:#E6F7EE">🛡️</div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:700" data-tj="Пардохти фармоиш #417" data-ru="Оплата заказа #417">Пардохти фармоиш #417</div>
+            <div class="tiny muted">23.10, 10:02 · <span data-tj="escrow" data-ru="escrow">escrow</span></div>
+          </div>
+          <div style="text-align:right"><div class="money" style="font-size:12.5px;color:var(--ink)">−278.00</div><div class="tiny" style="color:#B47A00" data-tj="мунҷамид" data-ru="заморожено">мунҷамид</div></div>
+        </div>
+        <div class="txn">
+          <div class="ic" style="background:#E6F7EE">✅</div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:700" data-tj="Фармоиш #402 анҷом ёфт" data-ru="Заказ #402 завершён">Фармоиш #402 анҷом ёфт</div>
+            <div class="tiny muted">21.10, 16:40</div>
+          </div>
+          <div style="text-align:right"><div class="money" style="font-size:12.5px;color:var(--green)">+3.10</div><div class="tiny muted" data-tj="кэшбэк" data-ru="кэшбэк">кэшбэк</div></div>
+        </div>
+        <div class="txn">
+          <div class="ic" style="background:#FFF4DC">🎁</div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:700" data-tj="Бонуси дӯст" data-ru="Бонус за друга">Бонуси дӯст</div>
+            <div class="tiny muted">19.10 · referral</div>
+          </div>
+          <div style="text-align:right"><div class="money" style="font-size:12.5px;color:var(--green)">+10.00</div></div>
+        </div>
+        <div class="txn" style="border:0">
+          <div class="ic" style="background:#EAF1FE">↩️</div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:700" data-tj="Баргардонии фармоиш #388" data-ru="Возврат заказа #388">Баргардонии фармоиш #388</div>
+            <div class="tiny muted">15.10, 11:05</div>
+          </div>
+          <div style="text-align:right"><div class="money" style="font-size:12.5px;color:var(--green)">+149.00</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></div>
+<div class="caption">6 · Ҳамён <span data-tj="Бақия + escrow + кэшбэк + купонҳо дар як ҷо" data-ru="Баланс + escrow + кэшбэк + купоны в одном месте">Бақия + escrow + кэшбэк + купонҳо дар як ҷо</span></div>
+</div>
+
+<!-- ═══════════════ 7. ADMIN DASHBOARD ═══════════════ -->
+<div style="grid-column:1/-1;width:100%;max-width:720px">
+<div class="phone wide"><div class="screen">
+  <div class="admin">
+    <div class="h">
+      <div>
+        <h2 data-tj="Панели идоракунӣ" data-ru="Панель управления">Панели идоракунӣ</h2>
+        <div class="sub2" data-tj="DuoBozor · 23 октябр 2026 · Нақши шумо: Админ" data-ru="DuoBozor · 23 октября 2026 · Ваша роль: Админ">DuoBozor · 23 октябр 2026 · Нақши шумо: Админ</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="background:#161D2C;border:1px solid #232C3E;border-radius:10px;padding:7px 11px;font-size:11px;color:#C2CADB" data-tj="🔍 Ҷустуҷӯи фармоиш / фурӯшанда" data-ru="🔍 Поиск заказа / продавца">🔍 Ҷустуҷӯи фармоиш / фурӯшанда</div>
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#E8402A,#FF8A3D);display:grid;place-items:center;font-weight:800;font-size:12px;color:#fff">A</div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="lb" data-tj="Даромад (имрӯз)" data-ru="Выручка (сегодня)">Даромад (имрӯз)</div><div class="v">48 320 c.</div><div class="d" style="color:#5FD394">▲ 12.4%</div></div>
+      <div class="kpi"><div class="lb" data-tj="Дар escrow" data-ru="В escrow">Дар escrow</div><div class="v" style="color:#FFC24A">216 740 c.</div><div class="d" style="color:#7E89A1" data-tj="847 фармоиш" data-ru="847 заказов">847 фармоиш</div></div>
+      <div class="kpi"><div class="lb" data-tj="Комиссия (моҳ)" data-ru="Комиссия (месяц)">Комиссия (моҳ)</div><div class="v">31 208 c.</div><div class="d" style="color:#5FD394">▲ 8.1%</div></div>
+      <div class="kpi"><div class="lb" data-tj="Баҳсҳои кушод" data-ru="Открытые споры">Баҳсҳои кушод</div><div class="v" style="color:#FF8C82">7</div><div class="d" style="color:#FF8C82" data-tj="2 SLA хатар" data-ru="2 на грани SLA">2 SLA хатар</div></div>
+    </div>
+
+    <div class="grid3" style="margin-top:12px">
+      <div class="panel" style="margin-top:0">
+        <div class="pt"><span data-tj="Ҷараёни пул — имрӯз" data-ru="Денежный поток — сегодня">Ҷараёни пул — имрӯз</span></div>
+        <div class="flowbox">
+          <div style="display:flex;justify-content:space-between"><span data-tj="Қабул ба escrow" data-ru="Принято в escrow">Қабул ба escrow</span><b>64 100 c.</b></div>
+          <div style="display:flex;justify-content:space-between"><span data-tj="Релиз ба фурӯшандагон" data-ru="Выплачено продавцам">Релиз ба фурӯшандагон</span><b>52 890 c.</b></div>
+          <div style="display:flex;justify-content:space-between"><span data-tj="Комиссияи платформа" data-ru="Комиссия платформы">Комиссияи платформа</span><b style="color:#5FD394">5 980 c.</b></div>
+          <div style="display:flex;justify-content:space-between"><span data-tj="Бонуси менеджерҳо" data-ru="Бонусы менеджеров">Бонуси менеджерҳо</span><b style="color:#84AEFF">897 c.</b></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px dashed #2C3648;margin-top:6px;padding-top:6px"><span data-tj="Баргардонида шуд" data-ru="Возвраты">Баргардонида шуд</span><b style="color:#FF8C82">1 240 c.</b></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:0">
+        <div class="pt"><span data-tj="Payout-ҳои интизорӣ" data-ru="Ожидают выплаты">Payout-ҳои интизорӣ</span><span class="tag t-wait">3</span></div>
+        <div style="font-size:11.5px;line-height:1.9;color:#C2CADB">
+          <div style="display:flex;justify-content:space-between"><span>Bozori Nav</span><b style="color:#fff">12 480 c.</b></div>
+          <div style="display:flex;justify-content:space-between"><span>TechnoPlus</span><b style="color:#fff">8 210 c.</b></div>
+          <div style="display:flex;justify-content:space-between"><span>Modniy Dom</span><b style="color:#fff">3 940 c.</b></div>
+        </div>
+        <div class="bar" style="margin-top:12px"><i style="width:64%"></i></div>
+        <div style="font-size:10px;color:#7E89A1;margin-top:6px" data-tj="Дар 24 соат тасдиқ шуд: 64%" data-ru="Подтверждено за 24ч: 64%">Дар 24 соат тасдиқ шуд: 64%</div>
+        <div style="display:flex;gap:6px;margin-top:12px">
+          <div style="flex:1;background:#1E2A20;border:1px solid #2C4634;color:#5FD394;text-align:center;padding:8px;border-radius:9px;font:700 10.5px var(--font)" data-tj="✓ Тасдиқ" data-ru="✓ Одобрить">✓ Тасдиқ</div>
+          <div style="flex:1;background:#2A1B1D;border:1px solid #47282C;color:#FF8C82;text-align:center;padding:8px;border-radius:9px;font:700 10.5px var(--font)" data-tj="✕ Рад" data-ru="✕ Отклонить">✕ Рад</div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:0">
+        <div class="pt"><span data-tj="Амният" data-ru="Безопасность">Амният</span><span class="tag t-rel" data-tj="OK" data-ru="OK">OK</span></div>
+        <div style="font-size:11px;color:#94A0B8;line-height:1.85">
+          <div style="display:flex;justify-content:space-between"><span data-tj="Ledger баланс" data-ru="Баланс ledger">Ledger баланс</span><b style="color:#5FD394">0.00 ✓</b></div>
+          <div style="display:flex;justify-content:space-between"><span data-tj="Амалҳои 4-eye" data-ru="4-eye операции">Амалҳои 4-eye</span><b style="color:#FFC24A">2</b></div>
+          <div style="display:flex;justify-content:space-between"><span data-tj="Кӯшиши ноком" data-ru="Неудачные входы">Кӯшиши ноком</span><b>41</b></div>
+          <div style="display:flex;justify-content:space-between"><span data-tj="Backup охирин" data-ru="Последний backup">Backup охирин</span><b style="color:#5FD394">17:00 ✓</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="pt">
+        <span data-tj="Фармоишҳои охирин — релизи escrow" data-ru="Последние заказы — выплаты escrow">Фармоишҳои охирин — релизи escrow</span>
+        <span style="font-size:10px;color:#7E89A1" data-tj="Ҳамаи амалҳо дар audit_log" data-ru="Все действия в audit_log">Ҳамаи амалҳо дар audit_log</span>
+      </div>
+      <table>
+        <thead><tr>
+          <th data-tj="Фармоиш" data-ru="Заказ">Фармоиш</th>
+          <th data-tj="Фурӯшанда" data-ru="Продавец">Фурӯшанда</th>
+          <th data-tj="Маблағ" data-ru="Сумма">Маблағ</th>
+          <th data-tj="Комиссия" data-ru="Комиссия">Комиссия</th>
+          <th data-tj="Ҳолат" data-ru="Статус">Ҳолат</th>
+          <th data-tj="Менеджер" data-ru="Менеджер">Менеджер</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>#DB-000417</td><td>Bozori Nav</td><td style="color:#fff">278.00</td><td>22.24</td><td><span class="tag t-held" data-tj="Дар escrow" data-ru="В escrow">Дар escrow</span></td><td>С. Каримов</td></tr>
+          <tr><td>#DB-000416</td><td>TechnoPlus</td><td style="color:#fff">1 240.00</td><td>62.00</td><td><span class="tag t-held" data-tj="Дар escrow" data-ru="В escrow">Дар escrow</span></td><td>М. Юсупова</td></tr>
+          <tr><td>#DB-000414</td><td>Modniy Dom</td><td style="color:#fff">560.00</td><td>56.00</td><td><span class="tag t-rel" data-tj="Релиз шуд" data-ru="Выплачено">Релиз шуд</span></td><td>С. Каримов</td></tr>
+          <tr><td>#DB-000411</td><td>Bozori Nav</td><td style="color:#fff">149.00</td><td>11.92</td><td><span class="tag t-disp" data-tj="Баҳс" data-ru="Спор">Баҳс</span></td><td>—</td></tr>
+          <tr><td>#DB-000409</td><td>Kudak Land</td><td style="color:#fff">320.00</td><td>25.60</td><td><span class="tag t-wait" data-tj="Интизори тасдиқ" data-ru="Ждёт подтверждения">Интизори тасдиқ</span></td><td>М. Юсупова</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+      <div style="background:#161D2C;border:1px solid #232C3E;border-radius:10px;padding:9px 13px;font-size:11px;color:#C2CADB" data-tj="👤 Корбарон ва нақшҳо" data-ru="👤 Пользователи и роли">👤 Корбарон ва нақшҳо</div>
+      <div style="background:#161D2C;border:1px solid #232C3E;border-radius:10px;padding:9px 13px;font-size:11px;color:#C2CADB" data-tj="🏪 KYC-и фурӯшандагон (4)" data-ru="🏪 KYC продавцов (4)">🏪 KYC-и фурӯшандагон (4)</div>
+      <div style="background:#161D2C;border:1px solid #232C3E;border-radius:10px;padding:9px 13px;font-size:11px;color:#C2CADB" data-tj="⚖️ Баҳсҳо (7)" data-ru="⚖️ Споры (7)">⚖️ Баҳсҳо (7)</div>
+      <div style="background:#161D2C;border:1px solid #232C3E;border-radius:10px;padding:9px 13px;font-size:11px;color:#C2CADB" data-tj="📊 Ҳисоботҳо" data-ru="📊 Отчёты">📊 Ҳисоботҳо</div>
+      <div style="background:#161D2C;border:1px solid #232C3E;border-radius:10px;padding:9px 13px;font-size:11px;color:#C2CADB" data-tj="⚙️ Танзимот" data-ru="⚙️ Настройки">⚙️ Танзимот</div>
+      <div style="background:#161D2C;border:1px solid #232C3E;border-radius:10px;padding:9px 13px;font-size:11px;color:#C2CADB" data-tj="🧾 Audit log" data-ru="🧾 Audit log">🧾 Audit log</div>
+    </div>
+  </div>
+</div></div>
+<div class="caption">7 · Панели админ <span data-tj="Идораи ҳама чиз: escrow, payout, баҳс, амният, аудит" data-ru="Управление всем: escrow, выплаты, споры, безопасность, аудит">Идораи ҳама чиз: escrow, payout, баҳс, амният, аудит</span></div>
+</div>
+
+</div>
+
+<script>
+function setLang(l, btn){
+  document.querySelectorAll('.langbtn button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.documentElement.lang = l;
+  document.querySelectorAll('[data-tj]').forEach(el=>{
+    el.textContent = el.getAttribute('data-'+l) || el.textContent;
+  });
+}
+</script>
+</body>
+</html>

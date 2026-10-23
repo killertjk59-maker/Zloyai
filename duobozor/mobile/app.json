@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "DuoBozor",
+    "slug": "duobozor",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#E8402A"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "tj.duobozor.app"
+    },
+    "android": {
+      "package": "tj.duobozor.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#E8402A"
+      },
+      "permissions": ["android.permission.INTERNET", "android.permission.VIBRATE"]
+    },
+    "extra": {
+      "apiUrl": "https://api.duobozor.tj"
+    }
+  }
+}

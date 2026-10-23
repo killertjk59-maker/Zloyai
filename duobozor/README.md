@@ -9,7 +9,7 @@
 ## 📱 APK гирифтан
 
 1. Ба [Releases](https://github.com/killertjk59-maker/Zloyai/releases) гузаред
-2. `duobozor-1.0.0.apk`-ро зеркашӣ кунед
+2. `duobozor-1.1.0.apk`-ро зеркашӣ кунед
 3. Дар телефон кушоед → «Install unknown apps»-ро барои браузер иҷозат диҳед
 
 APK аз ҷониби **GitHub Actions** сохта мешавад (`.github/workflows/duobozor-apk.yml`):
@@ -26,10 +26,12 @@ Node 20 → JDK 17 → `expo prebuild` → `gradlew assembleRelease` → artifac
 | **Ledger** | Ҳисобҳои дутарафа (double-entry) бо **тийин** (адади бутун). Σ ҳамаи ҳисобҳо = 0 |
 | **Комиссия** | PSP 1.5%, комиссияи категория 5–12%, бонуси менеҷер 15% аз комиссия |
 | **Нақшҳо** | `buyer` · `seller` · `manager` · `admin` (панелҳои алоҳида дар барнома) |
-| **Воридшавӣ** | Telegram · Google · телефон. Рақам = калиди identity, на аккаунт |
+| **Воридшавӣ** | Telegram · Google · телефон · **админ (рақам + рамз)**. Ҳангоми сабти ном **ном, насаб, синну сол** пурсида мешавад |
+| **Админ** | `+992 92 111 22 33` · рамз `admin2026` → панели пурра (escrow, комиссия, payout, аудит) |
 | **Забон** | Тоҷикӣ + Русӣ (130 калид, пурра) |
 | **Оффлайн** | Навбати амалҳо дар AsyncStorage, `REQUIRES_NETWORK` guard, синхронӣ |
-| **Аниматсия** | Tab bar: morph (spring pill) + ripple + FAB бо менюи тобеъ |
+| **Аниматсия** | Tab bar: morph (spring pill) + ripple + FAB; ҳар экран fade+slide; кортҳо бо stagger; скайли пахш; аниматсияи «ба сабад» |
+| **Устуворӣ** | ErrorBoundary дар ҳар экран; вибратсия хомӯш карда шуд; бе Intl (Hermes-хатар) |
 
 ## 💰 Қоидаҳои пул
 
@@ -46,7 +48,7 @@ auto-release     = 7 рӯз          payout cooldown = 24 соат
 ```
 
 Ҳама дар тийин (`1 TJS = 100 tiyn`), ҳеҷ гоҳ float.
-Санҷиш: `cd mobile && npm test` → **60 санҷиш**.
+Санҷиш: `cd mobile && npm test` → **60 санҷиш** + `npm run test:ui` → **8 санҷиши render/пахш**.
 
 ## 🔐 Телефон = identity
 
@@ -76,7 +78,7 @@ duobozor/
 │   ├── src/lib/       ← money.js (tiyn+ledger), offlineQueue.js
 │   ├── src/screens/   ← 12 экран
 │   ├── src/components/← ui.js, TabBar.js (morph+ripple+FAB)
-│   └── test/          ← 60 санҷиши мантиқ
+│   └── test/          ← 60 санҷиши мантиқ + 8 санҷиши UI (jest-expo)
 ├── docs/              ← нақша, auth, дизайн, тафтиш, offline
 ├── tests/             ← 6 гурӯҳи санҷиш (161 check)
 └── scripts/           ← bot.mjs, notify.sh

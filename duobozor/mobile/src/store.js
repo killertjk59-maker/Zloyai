@@ -12,7 +12,12 @@ import {
 } from './lib/money';
 import { OfflineQueue } from './lib/offlineQueue';
 
-const KEY = 'duobozor.state.v3';
+const KEY = 'duobozor.state.v4';
+
+// ── Ҳисобҳои админ (демо). Дар сервери воқеӣ — Argon2 + 2FA. ──
+export const ADMIN_ACCOUNTS = [
+  { id: 'u_admin1', phone: '+992921112233', password: 'admin2026', name: 'Абдулло Назаров', age: 34 },
+];
 const DAY = 86400000;
 const GB_TTL = 24 * 3600 * 1000;
 
@@ -196,6 +201,108 @@ export function AppProvider({ children }) {
   }, []);
 
   const logout = useCallback(() => setState((p) => ({ ...p, user: null })), []);
+  /* ── САБТИ НОМ: ном, насаб, синну сол, телефон ── */
+  const register = useCallback((form) => {
+    const s = ref.current;
+    const name = String(form.name || '').trim();
+    const surname = String(form.surname || '').trim();
+    const age = parseInt(form.age, 10);
+    const phone = normalizePhone(form.phone);
+
+    if (name.length < 2) return { ok: false, field: 'name', error: tr('name_invalid') };
+    if (!(age >= 12 && age <= 100)) return { ok: false, field: 'age', error: tr('age_invalid') };
+    if (form.provider === 'phone' && !phone) return { ok: false, field: 'phone', error: tr('phone_invalid') };
+    if (form.provider !== 'phone' && form.phone && !phone) return { ok: false, field: 'phone', error: tr('phone_invalid') };
+
+    const full = [name, surname].filter(Boolean).join(' ');
+    let user = phone ? s.users.find((u) => u.phone === phone) : null;
+
+    if (user) {
+      user = {
+        ...user, name: full, surname, age, city: form.city || user.city || 'Хуҷанд',
+        gender: form.gender || user.gender || null,
+        identities: user.identities.some((i) => i.provider === form.provider)
+          ? user.identities
+          : [...user.identities, { provider: form.provider, uid: phone || form.provider, hint: phone ? maskPhone(phone) : form.provider, verified: true }],
+      };
+      setState((p) => ({ ...p, users: p.users.map((u) => (u.id === user.id ? user : u)), user, onboarded: true }));
+    } else {
+      user = {
+        id: uid('u'),
+        name: full,
+        surname,
+        age,
+        city: form.city || 'Хуҷанд',
+        gender: form.gender || null,
+        phone: phone || null,
+        lang: s.lang,
+        roles: ['buyer'],
+        kyc: 'none',
+        identities: [{ provider: form.provider, uid: phone || form.provider, hint: phone ? maskPhone(phone) : form.provider, verified: true }],
+        createdAt: now(),
+      };
+      setState((p) => ({
+        ...p,
+        users: [...p.users, user],
+        wallets: { ...p.wallets, [user.id]: { balance: 500 * TJS, cashback: 0, lastPayoutAt: 0 } },
+        user,
+        onboarded: true,
+      }));
+    }
+    showToast(`${tr('welcome_back')}, ${name}!`);
+    return { ok: true, user };
+  }, [showToast]);
+
+  /* ── ВОРИДШАВИИ АДМИН: рақам + рамз ── */
+  const adminLogin = useCallback((rawPhone, password) => {
+    const s = ref.current;
+    const phone = normalizePhone(rawPhone);
+    const acc = ADMIN_ACCOUNTS.find((a) => a.phone === phone && a.password === String(password || '').trim());
+    if (!acc) return { ok: false, error: tr('admin_wrong') };
+
+    let user = s.users.find((u) => u.id === acc.id);
+    if (!user) {
+      user = {
+        id: acc.id,
+        name: acc.name,
+        surname: '',
+        age: acc.age,
+        city: 'Душанбе',
+        phone: acc.phone,
+        lang: s.lang,
+        roles: ['admin', 'manager', 'seller', 'buyer'],
+        kyc: 'approved',
+        identities: [{ provider: 'phone', uid: acc.phone, hint: maskPhone(acc.phone), verified: true }],
+        createdAt: now(),
+        isAdmin: true,
+      };
+    } else {
+      user = { ...user, roles: ['admin', 'manager', 'seller', 'buyer'] };
+    }
+
+    setState((p) => ({
+      ...p,
+      users: p.users.some((u) => u.id === user.id) ? p.users.map((u) => (u.id === user.id ? user : u)) : [...p.users, user],
+      wallets: { ...p.wallets, [user.id]: p.wallets[user.id] || { balance: 0, cashback: 0, lastPayoutAt: 0 } },
+      user,
+      onboarded: true,
+      audit: [...p.audit, { id: uid('a'), at: now(), actor: acc.name, action: 'auth.admin', ref: maskPhone(acc.phone) }],
+    }));
+    showToast(`${tr('admin_badge')} · ${acc.name}`);
+    return { ok: true, user };
+  }, [showToast]);
+
+  const updateProfile = useCallback((patch) => {
+    setState((p) => {
+      if (!p.user) return p;
+      const user = { ...p.user, ...patch };
+      return { ...p, user, users: p.users.map((u) => (u.id === user.id ? user : u)) };
+    });
+    showToast(tr('profile_saved'));
+    return { ok: true };
+  }, [showToast]);
+
+
   const setLang = useCallback((lang) => setState((p) => ({ ...p, lang })), []);
 
   /* ─────────────────────────── САБАД ─────────────────────────── */
@@ -595,9 +702,9 @@ export function AppProvider({ children }) {
   const myOrders = state.orders.filter((o) => o.buyerId === state.user?.id);
   const myGroupBuys = state.groupBuys.filter((g) => g.members.some((m) => m.userId === state.user?.id));
   const myWallet = state.wallets[state.user?.id] || { balance: 0, cashback: 0 };
-  const escrowTotal = myOrders.filter((o) => o.escrow.state === 'held').reduce((a, b) => a + o.escrow.amount, 0);
+  const escrowTotal = myOrders.filter((o) => o.escrow && o.escrow.state === 'held').reduce((a, b) => a + (b.escrow ? b.escrow.amount : 0), 0);
   const sellerOrders = state.orders.filter((o) => o.shopId && (state.shops.find((s) => s.sellerId === 'u_seller1') || {}).id === o.shopId);
-  const adminEscrow = state.orders.filter((o) => o.escrow.state === 'held');
+  const adminEscrow = state.orders.filter((o) => o.escrow && o.escrow.state === 'held');
   const platformRevenue = balanceOf(state.ledger, 'platform:revenue');
   const ledgerSum = (() => {
     const accs = new Set();
@@ -611,7 +718,7 @@ export function AppProvider({ children }) {
     state, ready, t: tr, name,
     toast, showToast,
     // auth
-    login, logout, setLang,
+    login, register, adminLogin, updateProfile, logout, setLang,
     // cart / order
     addToCart, setQty, clearCart, cartTotals, validateCheckout, placeOrder,
     confirmReceipt, advanceOrder, openDispute,

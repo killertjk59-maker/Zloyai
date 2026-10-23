@@ -1,191 +1,205 @@
 // duobozor/mobile/src/components/TabBar.js
-// Morphing indicator + Ripple + FAB — бо Animated API-и React Native (бе dependency иловагӣ)
+// Morphing pill + ripple + FAB — ҳамаи аниматсияҳо бо useNativeDriver: true (устувор)
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, Animated, StyleSheet, Dimensions, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
-import { C, S } from '../theme';
+import { C, S, G } from '../theme';
 
 const { width: W } = Dimensions.get('window');
-const BAR_H = 66;
-const TAB_W = (W - 12) / 5;
+const BAR_H = 68;
+const SLOTS = 6;
+const SLOT_W = W / SLOTS;
+const PILL_W = 58;
 
+// index дар TABS ↔ slot (FAB дар байни 2 ва 3)
 const TABS = [
-  { key: 'home', icon: 'home-outline', iconOn: 'home', label: 'tab_home' },
-  { key: 'search', icon: 'search-outline', iconOn: 'search', label: 'tab_search' },
-  null, // FAB
-  { key: 'cart', icon: 'bag-outline', iconOn: 'bag', label: 'tab_cart' },
-  { key: 'orders', icon: 'receipt-outline', iconOn: 'receipt', label: 'tab_orders' },
+  { key: 'home', icon: 'home-outline', on: 'home', label: 'tab_home' },
+  { key: 'search', icon: 'search-outline', on: 'search', label: 'tab_search' },
+  { key: 'fab', fab: true },
+  { key: 'cart', icon: 'bag-outline', on: 'bag', label: 'tab_cart' },
+  { key: 'orders', icon: 'receipt-outline', on: 'receipt', label: 'tab_orders' },
+  { key: 'profile', icon: 'person-outline', on: 'person', label: 'tab_profile' },
 ];
+const KEYS = ['home', 'search', 'cart', 'orders', 'profile'];
+const TAB_INDEX = { home: 0, search: 1, cart: 2, orders: 3, profile: 4 };
+const slotOf = (i) => (i < 2 ? i : i + 1);
 
-function Ripple({ x, y, size }) {
-  const s = useRef(new Animated.Value(0)).current;
-  const o = useRef(new Animated.Value(0.28)).current;
+function Ripple({ x, y }) {
+  const p = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(s, { toValue: 1, duration: 520, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-      Animated.timing(o, { toValue: 0, duration: 520, useNativeDriver: true }),
-    ]).start();
+    Animated.timing(p, { toValue: 1, duration: 520, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
   }, []);
+  const size = 44;
   return (
-    <Animated.View pointerEvents="none" style={{
-      position: 'absolute', width: size, height: size, borderRadius: size / 2,
-      left: x - size / 2, top: y - size / 2, backgroundColor: C.red,
-      opacity: o, transform: [{ scale: s }],
-    }} />
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        width: size, height: size, borderRadius: size / 2,
+        left: Math.max(0, x - size / 2), top: Math.max(0, y - size / 2),
+        backgroundColor: C.red,
+        opacity: p.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 0.3, 0] }),
+        transform: [{ scale: p.interpolate({ inputRange: [0, 1], outputRange: [0.3, 2.4] }) }],
+      }}
+    />
   );
 }
 
 export default function TabBar({ active, onChange, t, cartCount, orderBadge }) {
-  const pillX = useRef(new Animated.Value(0)).current;
-  const pillW = useRef(new Animated.Value(58)).current;
-  const [ripples, setRipples] = useState({});
-  const [fabOpen, setFabOpen] = useState(false);
+  const pill = useRef(new Animated.Value(slotOf(active || 0) * SLOT_W + (SLOT_W - PILL_W) / 2)).current;
+  const pillScale = useRef(new Animated.Value(1)).current;
+  const iconScales = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(0))).current;
   const fabRot = useRef(new Animated.Value(0)).current;
-  const menuAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnims = useRef(TABS.map(() => new Animated.Value(1))).current;
+  const menu = useRef(new Animated.Value(0)).current;
+  const [fabOpen, setFabOpen] = useState(false);
+  const [ripples, setRipples] = useState({});
 
-  const slotOf = (i) => (i < 2 ? i : i + 1);
-
-  const moveTo = (i) => {
+  const animateActive = (idx) => {
     Animated.parallel([
-      Animated.spring(pillX, { toValue: slotOf(i) * TAB_W + (TAB_W - 58) / 2, useNativeDriver: true, damping: 18, stiffness: 220, mass: 0.9 }),
-      Animated.spring(pillW, { toValue: 58, useNativeDriver: false, damping: 18, stiffness: 220 }),
+      Animated.spring(pill, {
+        toValue: slotOf(idx) * SLOT_W + (SLOT_W - PILL_W) / 2,
+        useNativeDriver: true, damping: 17, stiffness: 190, mass: 0.8,
+      }),
+      Animated.sequence([
+        Animated.timing(pillScale, { toValue: 0.82, duration: 110, useNativeDriver: true }),
+        Animated.spring(pillScale, { toValue: 1, useNativeDriver: true, damping: 10, stiffness: 240 }),
+      ]),
+      ...iconScales.map((v, i) => Animated.spring(v, {
+        toValue: i === idx ? 1 : 0, useNativeDriver: true, damping: 12, stiffness: 220,
+      })),
     ]).start();
   };
 
-  useEffect(() => { pillX.setValue(slotOf(active) * TAB_W + (TAB_W - 58) / 2); }, []);
+  useEffect(() => { animateActive(active || 0); }, [active]);
 
-  const onTab = (i, e) => {
-    try { Haptics.selectionAsync(); } catch {}
-    const idx = i < 2 ? i : i - 1;
-    moveTo(idx);
-    const { locationX, locationY } = e.nativeEvent;
+  const press = (tabIdx, e) => {
+    const idx = tabIdx < 2 ? tabIdx : tabIdx - 1;
+    const x = e && e.nativeEvent ? e.nativeEvent.locationX : 20;
+    const y = e && e.nativeEvent ? e.nativeEvent.locationY : 20;
     const id = Date.now();
-    setRipples((r) => ({ ...r, [idx]: { id, x: locationX, y: locationY } }));
-    setTimeout(() => setRipples((r) => { const n = { ...r }; delete n[idx]; return n; }), 560);
-
-    Animated.sequence([
-      Animated.timing(scaleAnims[i], { toValue: 0.86, duration: 70, useNativeDriver: true }),
-      Animated.spring(scaleAnims[i], { toValue: 1, useNativeDriver: true, damping: 12, stiffness: 260 }),
-    ]).start();
-
+    const key = KEYS[idx];
+    setRipples((r) => ({ ...r, [key]: { id, x, y } }));
+    setTimeout(() => setRipples((r) => { const n = { ...r }; delete n[key]; return n; }), 560);
+    animateActive(idx);
     onChange(idx);
   };
 
   const toggleFab = () => {
-    try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
     const next = !fabOpen;
     setFabOpen(next);
     Animated.parallel([
-      Animated.spring(fabRot, { toValue: next ? 1 : 0, useNativeDriver: true, damping: 14, stiffness: 200 }),
-      Animated.timing(menuAnim, { toValue: next ? 1 : 0, duration: 220, useNativeDriver: true }),
+      Animated.spring(fabRot, { toValue: next ? 1 : 0, useNativeDriver: true, damping: 13, stiffness: 190 }),
+      Animated.timing(menu, { toValue: next ? 1 : 0, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
     ]).start();
   };
 
   const fabActions = [
-    { key: 'group', icon: 'people', color: C.red, bg: C.redSoft, label: t('create_group') },
-    { key: 'invite', icon: 'gift', color: '#B47A00', bg: C.yellowSoft, label: t('group_invite') },
+    { key: 'newgroup', icon: 'people', label: t('create_group'), color: C.red, bg: C.redSoft },
+    { key: 'invite', icon: 'gift', label: t('group_invite'), color: C.goldText, bg: C.yellowSoft },
   ];
 
+  const order = TABS.slice(0, 2).concat([TABS[2]], TABS.slice(3));
+
   return (
-    <View style={styles.bar}>
-      {fabOpen ? <Pressable style={StyleSheet.absoluteFill} onPress={toggleFab} /> : null}
-
-      <Animated.View pointerEvents="none" style={[styles.pill, { width: pillW, transform: [{ translateX: pillX }] }]} />
-
-      {TABS.map((tab, i) => {
-        if (!tab) {
-          return (
-            <View key="fab" style={styles.fabWrap}>
-              {fabActions.map((a, k) => (
-                <Animated.View
-                  key={a.key}
-                  pointerEvents={fabOpen ? 'auto' : 'none'}
-                  style={[styles.fabItem, {
-                    opacity: menuAnim,
+    <View style={styles.wrap}>
+      <View style={styles.bar}>
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.pill, { transform: [{ translateX: pill }, { scale: pillScale }] }]}
+        />
+        {order.map((tab, slot) => {
+          if (tab.fab) {
+            return (
+              <View key="fab" style={styles.slot}>
+                {fabActions.map((a, k) => (
+                  <Animated.View
+                    key={a.key}
+                    pointerEvents={fabOpen ? 'auto' : 'none'}
+                    style={[styles.fabItem, {
+                      opacity: menu,
+                      transform: [
+                        { translateY: menu.interpolate({ inputRange: [0, 1], outputRange: [18 + k * 10, 0] }) },
+                        { scale: menu.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) },
+                      ],
+                    }]}
+                  >
+                    <Pressable
+                      onPress={() => { toggleFab(); onChange(a.key); }}
+                      style={styles.fabItemInner}
+                    >
+                      <Text style={styles.fabLabel}>{a.label}</Text>
+                      <View style={[styles.fabIcon, { backgroundColor: a.bg }]}>
+                        <Ionicons name={a.icon} size={14} color={a.color} />
+                      </View>
+                    </Pressable>
+                  </Animated.View>
+                ))}
+                <Pressable testID="fab" onPress={toggleFab} hitSlop={10} style={{ marginTop: -22 }}>
+                  <Animated.View style={{
                     transform: [
-                      { translateY: menuAnim.interpolate({ inputRange: [0, 1], outputRange: [14 + k * 6, 0] }) },
-                      { scale: menuAnim.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) },
+                      { rotate: fabRot.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '135deg'] }) },
+                      { scale: fabRot.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] }) },
                     ],
-                  }]}
-                >
-                  <Pressable style={styles.fabItemInner} onPress={() => { toggleFab(); onChange(a.key); }}>
-                    <Text style={styles.fabItemText}>{a.label}</Text>
-                    <View style={[styles.fabItemIcon, { backgroundColor: a.bg }]}>
-                      <Ionicons name={a.icon} size={14} color={a.color} />
-                    </View>
-                  </Pressable>
-                </Animated.View>
-              ))}
-              <Pressable onPress={toggleFab} hitSlop={6} style={{ marginTop: -20 }}>
-                <Animated.View style={{
-                  transform: [
-                    { rotate: fabRot.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '135deg'] }) },
-                    { scale: fabRot.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] }) },
-                  ],
-                }}>
-                  <LinearGradient colors={[C.red, C.orange]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
-                    <Ionicons name="add" size={26} color="#fff" />
-                  </LinearGradient>
-                </Animated.View>
-              </Pressable>
-            </View>
+                  }}>
+                    <LinearGradient colors={G.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
+                      <Ionicons name="add" size={27} color="#fff" />
+                    </LinearGradient>
+                  </Animated.View>
+                </Pressable>
+              </View>
+            );
+          }
+
+          const idx = TAB_INDEX[tab.key];
+          const isActive = active === idx;
+          const badge = tab.key === 'cart' ? cartCount : tab.key === 'orders' ? orderBadge : 0;
+          const rip = ripples[tab.key];
+          const iconScale = iconScales[idx];
+          return (
+            <Pressable key={tab.key} testID={'tab-' + tab.key} style={styles.slot} onPress={(e) => press(slot, e)}>
+              {rip ? <Ripple x={rip.x} y={rip.y} /> : null}
+              <Animated.View style={{ transform: [{ scale: iconScale.interpolate({ inputRange: [0, 1], outputRange: [1, 1.16] }) }] }}>
+                <Ionicons name={isActive ? tab.on : tab.icon} size={22} color={isActive ? C.red : '#9AA3B7'} />
+              </Animated.View>
+              <Text style={[styles.label, isActive && { color: C.red, fontWeight: '800' }]} numberOfLines={1}>
+                {t(tab.label)}
+              </Text>
+              {badge > 0 ? (
+                <View style={styles.badge}><Text style={styles.badgeTxt}>{badge > 9 ? '9+' : badge}</Text></View>
+              ) : null}
+            </Pressable>
           );
-        }
-
-        const idx = i < 2 ? i : i - 1;
-        const isActive = active === idx;
-        const badge = tab.key === 'cart' ? cartCount : tab.key === 'orders' ? orderBadge : 0;
-        const rip = ripples[idx];
-
-        return (
-          <Pressable key={tab.key} style={styles.tab} onPress={(e) => onTab(i, e)}>
-            {rip ? <Ripple x={rip.x} y={rip.y} size={TAB_W * 1.8} /> : null}
-            <Animated.View style={{ transform: [{ scale: scaleAnims[i] }] }}>
-              <Ionicons name={isActive ? tab.iconOn : tab.icon} size={21} color={isActive ? C.red : '#A6AEC2'} />
-            </Animated.View>
-            <Text style={[styles.label, { color: isActive ? C.red : '#A6AEC2', fontWeight: isActive ? '800' : '600' }]} numberOfLines={1}>
-              {t(tab.label)}
-            </Text>
-            {badge > 0 ? (
-              <View style={styles.badge}><Text style={styles.badgeTxt}>{badge}</Text></View>
-            ) : null}
-          </Pressable>
-        );
-      })}
+        })}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  bar: {
-    height: BAR_H, flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
-    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.line, paddingHorizontal: 6, paddingBottom: 4,
-  },
+  wrap: { backgroundColor: '#fff', borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.line },
+  bar: { height: BAR_H, flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff' },
+  slot: { width: SLOT_W, height: BAR_H - 8, alignItems: 'center', justifyContent: 'center' },
   pill: {
-    position: 'absolute', top: 6, left: 6, height: 54, borderRadius: 16,
-    backgroundColor: 'rgba(232,64,42,0.10)', borderWidth: 1.5, borderColor: 'rgba(232,64,42,0.20)',
+    position: 'absolute', top: 8, width: PILL_W, height: 50, borderRadius: 17,
+    backgroundColor: 'rgba(232,64,42,0.10)', borderWidth: 1.5, borderColor: 'rgba(232,64,42,0.22)',
   },
-  tab: { width: TAB_W, height: 56, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 16 },
-  label: { fontSize: 9, marginTop: 3 },
+  label: { fontSize: 9, marginTop: 3, color: '#9AA3B7', fontWeight: '600' },
   badge: {
-    position: 'absolute', top: 6, right: TAB_W / 2 - 16, minWidth: 15, height: 15, borderRadius: 8,
+    position: 'absolute', top: 8, right: SLOT_W / 2 - 18, minWidth: 16, height: 16, borderRadius: 8,
     paddingHorizontal: 4, backgroundColor: C.red, alignItems: 'center', justifyContent: 'center',
     borderWidth: 1.5, borderColor: '#fff',
   },
   badgeTxt: { color: '#fff', fontSize: 8.5, fontWeight: '800' },
-  fabWrap: { width: TAB_W, alignItems: 'center', justifyContent: 'center' },
   fab: {
-    width: 52, height: 52, borderRadius: 18, alignItems: 'center', justifyContent: 'center',
-    shadowColor: C.red, shadowOpacity: 0.45, shadowRadius: 12, shadowOffset: { width: 0, height: 8 }, elevation: 10,
+    width: 54, height: 54, borderRadius: 19, alignItems: 'center', justifyContent: 'center',
+    shadowColor: C.red, shadowOpacity: 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 12,
   },
-  fabItem: { position: 'absolute', bottom: 46, alignItems: 'center' },
+  fabItem: { position: 'absolute', bottom: 44, alignItems: 'center' },
   fabItemInner: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 14,
-    paddingVertical: 8, paddingHorizontal: 12, ...S.shadow, elevation: 8,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 15,
+    paddingVertical: 8, paddingHorizontal: 12, ...S.shadow, elevation: 10,
   },
-  fabItemText: { fontSize: 11, fontWeight: '700', color: C.ink, marginRight: 8 },
-  fabItemIcon: { width: 26, height: 26, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  fabLabel: { fontSize: 11, fontWeight: '800', color: C.ink, marginRight: 8 },
+  fabIcon: { width: 26, height: 26, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
 });

@@ -56,6 +56,9 @@ jobs:
       - name: Logic tests (tiyn ledger)
         run: npm test
 
+      - name: UI render tests (screens + flows)
+        run: npm run test:ui
+
       - name: Prebuild Android project
         run: npx expo prebuild --platform android --no-install --clean
 
@@ -70,14 +73,14 @@ jobs:
       - name: Rename APK
         run: |
           mkdir -p out
-          cp android/app/build/outputs/apk/release/app-release.apk out/duobozor-1.0.0.apk
+          cp android/app/build/outputs/apk/release/app-release.apk out/duobozor-1.1.0.apk
           ls -lh out/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: duobozor-apk
-          path: duobozor/mobile/out/duobozor-1.0.0.apk
+          path: duobozor/mobile/out/duobozor-1.1.0.apk
           if-no-files-found: error
           retention-days: 90
 
@@ -92,7 +95,7 @@ jobs:
             - Гурӯҳхаридӣ (Pinduoduo), escrow, tj+ru
             - Build: `${{ github.run_number }}` · commit `${{ github.sha }}`
             - Насб: зеркашида, «Install unknown apps»-ро иҷозат диҳед.
-          files: duobozor/mobile/out/duobozor-1.0.0.apk
+          files: duobozor/mobile/out/duobozor-1.1.0.apk
           draft: false
           prerelease: false
         env:

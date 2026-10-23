@@ -1,3 +1,13 @@
+# 📱 DuoBozor APK — дар ҳамин репозиторий
+
+Барномаи нави **DuoBozor** (гурӯҳхаридии тоҷикӣ + escrow) дар папкаи [`duobozor/`](duobozor/) ҷойгир аст.
+
+- **APK-и омода:** [Releases → duobozor-1.0.0.apk](https://github.com/killertjk59-maker/Zloyai/releases/latest)
+- CI: `.github/workflows/duobozor-apk.yml` · Бот: `.github/workflows/duobozor-bot.yml`
+- Дастур: [`duobozor/README.md`](duobozor/README.md)
+
+---
+
 # ZLOY.AI — an AI language tutor with attitude
 
 A complete Android language-learning app: a Flutter (Material 3, dark) client that

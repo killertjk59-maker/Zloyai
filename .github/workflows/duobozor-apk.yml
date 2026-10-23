@@ -88,11 +88,13 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: duobozor-v1.0.0-${{ github.run_number }}
-          name: DuoBozor APK v1.0.0 (build ${{ github.run_number }})
+          tag_name: duobozor-v1.1.0-${{ github.run_number }}
+          name: DuoBozor APK v1.1.0 (build ${{ github.run_number }})
           body: |
-            ### DuoBozor — APK
+            ### DuoBozor v1.1.0 — APK
             - Гурӯҳхаридӣ (Pinduoduo), escrow, tj+ru
+            - Сабти ном: ном, насаб, синну сол · Админ: рақам + рамз
+            - Ислоҳ: крэшҳо, аниматсияи tab bar, вибратсия хомӯш
             - Build: `${{ github.run_number }}` · commit `${{ github.sha }}`
             - Насб: зеркашида, «Install unknown apps»-ро иҷозат диҳед.
           files: duobozor/mobile/out/duobozor-1.1.0.apk
